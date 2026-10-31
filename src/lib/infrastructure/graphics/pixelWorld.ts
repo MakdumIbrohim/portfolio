@@ -330,24 +330,25 @@ export class PixelWorldEngine {
 		this.worldG = this.grp();
 		this.groundG = this.grp();
 
-		for (let i = 0; i < 14; i++) {
-			this.mk(cloudT, 32, 24, -500 + i * 140, -30 - (i % 3) * 20, 1, this.cloudG);
+		for (let i = 0; i < 26; i++) {
+			this.mk(cloudT, 32, 24, -1200 + i * 140, -30 - (i % 3) * 20, 1, this.cloudG);
 		}
-		for (let i = 0; i < 9; i++) {
-			this.mk(hillT, 80, 40, -500 + i * 260, 20 + 32, 2, this.hillG);
+		for (let i = 0; i < 18; i++) {
+			this.mk(hillT, 80, 40, -1200 + i * 260, 20 + 32, 2, this.hillG);
 		}
-		for (let i = 0; i < 12; i++) {
-			this.mk(bushT, 32, 16, -500 + i * 300, 32 + 8, 3, this.bushG);
+		for (let i = 0; i < 22; i++) {
+			this.mk(bushT, 32, 16, -1200 + i * 300, 32 + 8, 3, this.bushG);
 		}
 
+		const groundWidth = 6400;
 		const gt = brickT.clone();
 		gt.needsUpdate = true;
 		gt.wrapS = gt.wrapT = THREE.RepeatWrapping;
-		gt.repeat.set(3800 / 16, 2);
+		gt.repeat.set(groundWidth / 16, 2);
 		gt.magFilter = gt.minFilter = THREE.NearestFilter;
 
 		const groundMesh = new THREE.Mesh(
-			new THREE.PlaneGeometry(3800, 32),
+			new THREE.PlaneGeometry(groundWidth, 32),
 			new THREE.MeshBasicMaterial({ map: gt, depthTest: false })
 		);
 		groundMesh.position.set(1700, 16, 0);

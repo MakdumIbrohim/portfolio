@@ -31,7 +31,7 @@
 				class="item {collected[item.name] ? 'got' : ''}"
 				onclick={(e) => handleItemClick(item.name, e)}
 			>
-				<span class="ico">{item.icon}</span>
+				<span class="ico">{@html item.icon}</span>
 				{item.name}
 			</button>
 		{/each}
@@ -89,14 +89,31 @@
 	}
 
 	.item .ico {
-		display: block;
-		font-size: 26px;
-		margin-bottom: 10px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 34px;
+		margin-bottom: 8px;
 		color: #fbd000;
+	}
+
+	.item .ico :global(svg) {
+		width: 28px;
+		height: 28px;
+		display: block;
+		transition: transform 0.1s;
+	}
+
+	.item:hover .ico :global(svg) {
+		transform: scale(1.12);
 	}
 
 	.item.got {
 		background: #43b047;
+	}
+
+	.item.got .ico {
+		color: #ffffff;
 	}
 
 	@media (max-width: 600px) {
@@ -112,8 +129,12 @@
 			font-size: 9px;
 		}
 		.item .ico {
-			font-size: 20px;
+			height: 28px;
 			margin-bottom: 6px;
+		}
+		.item .ico :global(svg) {
+			width: 22px;
+			height: 22px;
 		}
 	}
 </style>
