@@ -518,6 +518,54 @@ export class PixelWorldEngine {
 		document.addEventListener('visibilitychange', this.onVisibilityChange);
 	}
 
+	private isEnteringCastle = false;
+
+	public enterCastle(onEntered?: () => void) {
+		if (this.isEnteringCastle) {
+			if (onEntered) onEntered();
+			return;
+		}
+		this.isEnteringCastle = true;
+		sound.playStageClear();
+
+		const targetX = this.castle.position.x;
+		this.mario.scale.x = 12;
+		this.mario.visible = true;
+		this.mario.material.opacity = 1;
+
+		const startX = this.mario.position.x;
+		const distance = Math.max(80, targetX - startX);
+		const duration = Math.min(2.0, Math.max(0.8, distance / 260));
+
+		gsap.to(this.mario.position, {
+			x: targetX,
+			duration,
+			ease: 'power1.in',
+			onUpdate: () => {
+				this.mario.material.map =
+					Math.floor(this.t / 4) % 2 ? this.marioT.w1 : this.marioT.w2;
+			},
+			onComplete: () => {
+				this.mario.material.map = this.marioT.stand;
+				gsap.to(this.mario.material, {
+					opacity: 0,
+					duration: 0.3,
+					onComplete: () => {
+						this.mario.visible = false;
+						if (onEntered) {
+							onEntered();
+						}
+						setTimeout(() => {
+							this.mario.visible = true;
+							this.mario.material.opacity = 1;
+							this.isEnteringCastle = false;
+						}, 3000);
+					}
+				});
+			}
+		});
+	}
+
 	private loop() {
 		if (!this.running) return;
 		this.animId = requestAnimationFrame(this.loop);
@@ -537,42 +585,44 @@ export class PixelWorldEngine {
 		this.hillG.position.x = Math.round(this.camX * 0.5);
 		this.bushG.position.x = Math.round(this.camX * 0.2);
 
-		const mx = cx - Math.round(this.W * 0.25);
-		this.mario.position.x = mx;
-		this.mario.scale.x = 12 * this.dir;
-		this.mario.material.map =
-			this.t - this.moving < 8
-				? Math.floor(this.t / 5) % 2
-					? this.marioT.w1
-					: this.marioT.w2
-				: this.marioT.stand;
+		if (!this.isEnteringCastle) {
+			const mx = cx - Math.round(this.W * 0.25);
+			this.mario.position.x = mx;
+			this.mario.scale.x = 12 * this.dir;
+			this.mario.material.map =
+				this.t - this.moving < 8
+					? Math.floor(this.t / 5) % 2
+						? this.marioT.w1
+						: this.marioT.w2
+					: this.marioT.stand;
 
-		this.qs.forEach((b) => {
-			const dx = Math.abs(mx - b.userData.x);
-			if (dx < 8) this.hit(b);
-			else if (dx > 40) b.userData.cool = false;
-			b.position.y = b.userData.y + Math.round(b.userData.off);
-		});
+			this.qs.forEach((b) => {
+				const dx = Math.abs(mx - b.userData.x);
+				if (dx < 8) this.hit(b);
+				else if (dx > 40) b.userData.cool = false;
+				b.position.y = b.userData.y + Math.round(b.userData.off);
+			});
 
-		this.items.forEach((s) => {
-			if (s.userData.got) return;
-			if (s.userData.kind === 'coin') {
-				const frame = (Math.floor(this.t / 8) + s.userData.i) % 4;
-				s.material =
-					this.mats[frame] ||
-					(this.mats[frame] = new THREE.SpriteMaterial({
-						map: this.coinT[frame],
-						transparent: true,
-						depthTest: false
-					}));
-			}
-			if (Math.abs(mx - s.userData.x) < 8) {
-				s.userData.got = true;
-				s.visible = false;
-				sound.playCoin();
-				this.onCoinBump();
-			}
-		});
+			this.items.forEach((s) => {
+				if (s.userData.got) return;
+				if (s.userData.kind === 'coin') {
+					const frame = (Math.floor(this.t / 8) + s.userData.i) % 4;
+					s.material =
+						this.mats[frame] ||
+						(this.mats[frame] = new THREE.SpriteMaterial({
+							map: this.coinT[frame],
+							transparent: true,
+							depthTest: false
+						}));
+				}
+				if (Math.abs(mx - s.userData.x) < 8) {
+					s.userData.got = true;
+					s.visible = false;
+					sound.playCoin();
+					this.onCoinBump();
+				}
+			});
+		}
 
 		this.renderer.setClearColor(this.st.sky, 1);
 		this.renderer.render(this.scene, this.cam);

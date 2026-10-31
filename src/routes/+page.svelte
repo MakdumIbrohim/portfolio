@@ -41,6 +41,17 @@
 		});
 	}
 
+	function handleConnect(url: string) {
+		document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+		engine?.enterCastle(() => {
+			if (url.startsWith('mailto:')) {
+				window.location.href = url;
+			} else {
+				window.open(url, '_blank', 'noopener,noreferrer');
+			}
+		});
+	}
+
 	onMount(() => {
 		engine = new PixelWorldEngine(canvas, bumpCoin);
 		return () => {
@@ -80,6 +91,7 @@
 		github={PROFILE.github}
 		linkedin={PROFILE.linkedin}
 		instagram={PROFILE.instagram}
+		onConnect={handleConnect}
 	/>
 </main>
 
