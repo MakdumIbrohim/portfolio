@@ -43,7 +43,7 @@
 						<span class="platform-label">{c.label}</span>
 						<span class="platform-val">{c.val}</span>
 					</div>
-					<span class="enter-badge px">ENTER 🏰</span>
+					<span class="enter-badge px">ENTER</span>
 				</button>
 			{/each}
 		</div>
@@ -53,7 +53,7 @@
 			class="btn hello-btn"
 			onclick={() => onConnect(`mailto:${email}`)}
 		>
-			Say Hello 👑
+			Say Hello
 		</button>
 	</div>
 </section>
@@ -174,7 +174,7 @@
 		font: 8px 'Press Start 2P', monospace;
 		background: #b5651d;
 		color: #fff;
-		padding: 5px 6px;
+		padding: 6px 8px;
 		border: 2px solid #000;
 		white-space: nowrap;
 		flex-shrink: 0;

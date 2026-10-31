@@ -23,13 +23,17 @@ export class PixelWorldEngine {
 	private worldG!: THREE.Group;
 	private groundG!: THREE.Group;
 
-	private castle!: THREE.Sprite;
+	private castle1!: THREE.Sprite;
+	private castle2!: THREE.Sprite;
 	private mario!: THREE.Sprite;
 	private marioT: Record<string, THREE.CanvasTexture> = {};
 	private qs: THREE.Sprite[] = [];
 	private items: THREE.Sprite[] = [];
 	private coinT: THREE.CanvasTexture[] = [];
 	private mats: Record<number, THREE.SpriteMaterial> = {};
+
+	private isEnteringCastle = false;
+	private currentCastle: 'outside' | 'castle1' | 'castle2' = 'outside';
 
 	private st = { p: 0, sky: new THREE.Color('#5c94fc') };
 	private camX = 0;
@@ -324,6 +328,20 @@ export class PixelWorldEngine {
 			x.fillRect(36, 12, 8, 8);
 		});
 
+		const castle2T = this.cv(80, 72, (x) => {
+			x.fillStyle = '#312e81';
+			x.fillRect(8, 24, 64, 48);
+			x.fillRect(24, 8, 32, 16);
+			for (let i = 0; i < 5; i++) x.fillRect(8 + i * 14, 16, 8, 8);
+			for (let i = 0; i < 3; i++) x.fillRect(24 + i * 12, 0, 8, 8);
+			x.fillStyle = '#1e1b4b';
+			for (let y = 31; y < 72; y += 8) x.fillRect(8, y, 64, 1);
+			x.fillStyle = '#000';
+			x.fillRect(32, 48, 16, 24);
+			x.fillRect(34, 44, 12, 4);
+			x.fillRect(36, 12, 8, 8);
+		});
+
 		this.cloudG = this.grp();
 		this.hillG = this.grp();
 		this.bushG = this.grp();
@@ -363,7 +381,8 @@ export class PixelWorldEngine {
 			this.mk(pipeT(h), 32, h, x, 32 + h / 2, 4, this.worldG);
 		});
 
-		this.castle = this.mk(castleT, 80, 72, 2500, 32 + 36, 4, this.worldG);
+		this.castle1 = this.mk(castleT, 80, 72, 2340, 32 + 36, 4, this.worldG);
+		this.castle2 = this.mk(castle2T, 80, 72, 2520, 32 + 36, 4, this.worldG);
 
 		this.qs = [];
 		[260, 760, 1260, 1760, 2160].forEach((x) => {
@@ -464,7 +483,9 @@ export class PixelWorldEngine {
 			this.bushG.position.y =
 				-this.H / 2;
 		this.cloudG.position.y = this.H / 2;
-		this.castle.position.x = 2400 + 2 * Math.round(0.11 * this.W);
+		const baseX = 2320 + 2 * Math.round(0.08 * this.W);
+		this.castle1.position.x = baseX;
+		this.castle2.position.x = baseX + 190;
 	};
 
 	private initScrollTriggers() {
@@ -518,48 +539,69 @@ export class PixelWorldEngine {
 		document.addEventListener('visibilitychange', this.onVisibilityChange);
 	}
 
-	private isEnteringCastle = false;
-
 	public enterCastle(onEntered?: () => void) {
 		if (this.isEnteringCastle) {
-			if (onEntered) onEntered();
+			onEntered?.();
 			return;
 		}
 		this.isEnteringCastle = true;
-		sound.playStageClear();
 
-		const targetX = this.castle.position.x;
-		this.mario.scale.x = 12;
+		if (this.currentCastle === 'outside') {
+			const targetX = this.castle1.position.x;
+			this.runMarioTransition(targetX, 1, () => {
+				this.currentCastle = 'castle1';
+				this.isEnteringCastle = false;
+				onEntered?.();
+			});
+		} else if (this.currentCastle === 'castle1') {
+			this.mario.position.x = this.castle1.position.x;
+			sound.playJump();
+
+			const targetX = this.castle2.position.x;
+			this.runMarioTransition(targetX, 1, () => {
+				this.currentCastle = 'castle2';
+				this.isEnteringCastle = false;
+				onEntered?.();
+			});
+		} else {
+			this.mario.position.x = this.castle2.position.x;
+			sound.playJump();
+
+			const targetX = this.castle1.position.x;
+			this.runMarioTransition(targetX, -1, () => {
+				this.currentCastle = 'castle1';
+				this.isEnteringCastle = false;
+				onEntered?.();
+			});
+		}
+	}
+
+	private runMarioTransition(targetX: number, dir: 1 | -1, onDone: () => void) {
+		this.mario.scale.x = 12 * dir;
 		this.mario.visible = true;
 		this.mario.material.opacity = 1;
 
 		const startX = this.mario.position.x;
-		const distance = Math.max(80, targetX - startX);
-		const duration = Math.min(2.0, Math.max(0.8, distance / 260));
+		const distance = Math.max(70, Math.abs(targetX - startX));
+		const duration = Math.min(2.0, Math.max(0.7, distance / 220));
 
 		gsap.to(this.mario.position, {
 			x: targetX,
 			duration,
-			ease: 'power1.in',
+			ease: 'linear',
 			onUpdate: () => {
 				this.mario.material.map =
 					Math.floor(this.t / 4) % 2 ? this.marioT.w1 : this.marioT.w2;
 			},
 			onComplete: () => {
 				this.mario.material.map = this.marioT.stand;
+				sound.playStageClear();
 				gsap.to(this.mario.material, {
 					opacity: 0,
-					duration: 0.3,
+					duration: 0.25,
 					onComplete: () => {
 						this.mario.visible = false;
-						if (onEntered) {
-							onEntered();
-						}
-						setTimeout(() => {
-							this.mario.visible = true;
-							this.mario.material.opacity = 1;
-							this.isEnteringCastle = false;
-						}, 3000);
+						onDone();
 					}
 				});
 			}
@@ -586,19 +628,30 @@ export class PixelWorldEngine {
 		this.bushG.position.x = Math.round(this.camX * 0.2);
 
 		if (!this.isEnteringCastle) {
-			const mx = cx - Math.round(this.W * 0.25);
-			this.mario.position.x = mx;
-			this.mario.scale.x = 12 * this.dir;
-			this.mario.material.map =
-				this.t - this.moving < 8
-					? Math.floor(this.t / 5) % 2
-						? this.marioT.w1
-						: this.marioT.w2
-					: this.marioT.stand;
+			if (this.currentCastle === 'outside') {
+				const mx = cx - Math.round(this.W * 0.25);
+				this.mario.position.x = mx;
+				this.mario.scale.x = 12 * this.dir;
+				this.mario.visible = true;
+				this.mario.material.opacity = 1;
+				this.mario.material.map =
+					this.t - this.moving < 8
+						? Math.floor(this.t / 5) % 2
+							? this.marioT.w1
+							: this.marioT.w2
+						: this.marioT.stand;
+			} else {
+				this.mario.visible = false;
+				if (this.st.p < 0.72) {
+					this.currentCastle = 'outside';
+					this.mario.visible = true;
+					this.mario.material.opacity = 1;
+				}
+			}
 
 			this.qs.forEach((b) => {
-				const dx = Math.abs(mx - b.userData.x);
-				if (dx < 8) this.hit(b);
+				const dx = Math.abs(this.mario.position.x - b.userData.x);
+				if (dx < 8 && this.mario.visible) this.hit(b);
 				else if (dx > 40) b.userData.cool = false;
 				b.position.y = b.userData.y + Math.round(b.userData.off);
 			});
@@ -615,7 +668,7 @@ export class PixelWorldEngine {
 							depthTest: false
 						}));
 				}
-				if (Math.abs(mx - s.userData.x) < 8) {
+				if (Math.abs(this.mario.position.x - s.userData.x) < 8 && this.mario.visible) {
 					s.userData.got = true;
 					s.visible = false;
 					sound.playCoin();

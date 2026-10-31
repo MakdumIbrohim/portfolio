@@ -130,6 +130,12 @@
 		overflow-x: hidden;
 	}
 
+	:global(a),
+	:global(a:visited) {
+		color: inherit;
+		text-decoration: none;
+	}
+
 	:global(h1),
 	:global(h2),
 	:global(h3),
