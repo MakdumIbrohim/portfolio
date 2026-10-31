@@ -119,17 +119,23 @@
 
 	@media (max-width: 600px) {
 		section {
-			padding: 90px 14px 140px;
+			padding: 70px 12px 100px;
 		}
 		.panel {
-			padding: 16px 14px;
+			padding: 16px 12px;
 		}
 		.bio {
-			font-size: 19px;
+			font-size: 18px;
+		}
+		.actions {
+			flex-direction: column;
 		}
 		.btn {
 			font-size: 9px;
 			padding: 12px 12px;
+			width: 100%;
+			text-align: center;
+			margin: 0;
 		}
 	}
 </style>

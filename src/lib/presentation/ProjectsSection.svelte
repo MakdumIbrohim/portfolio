@@ -123,7 +123,7 @@
 
 	@media (max-width: 600px) {
 		section {
-			padding: 90px 14px 140px;
+			padding: 70px 12px 100px;
 		}
 		.cards {
 			grid-template-columns: 1fr;

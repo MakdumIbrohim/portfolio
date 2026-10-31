@@ -131,9 +131,27 @@
 	}
 
 	:global(a),
-	:global(a:visited) {
+	:global(a:visited),
+	:global(a:link) {
 		color: inherit;
 		text-decoration: none;
+	}
+
+	:global(header nav a),
+	:global(header nav a:visited),
+	:global(header nav a:link) {
+		font-family: 'Press Start 2P', 'Courier New', monospace !important;
+		font-size: 9px !important;
+		color: #ffffff !important;
+		text-decoration: none !important;
+		text-transform: uppercase !important;
+	}
+
+	:global(header nav a:hover),
+	:global(header nav a:focus-visible) {
+		color: #fbd000 !important;
+		border-color: #fbd000 !important;
+		text-decoration: none !important;
 	}
 
 	:global(h1),

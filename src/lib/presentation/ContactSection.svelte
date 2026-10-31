@@ -210,13 +210,20 @@
 
 	@media (max-width: 600px) {
 		section {
-			padding: 90px 14px 140px;
+			padding: 70px 12px 100px;
+		}
+		.panel {
+			padding: 16px 12px;
 		}
 		.links-grid {
 			grid-template-columns: 1fr;
+			gap: 8px;
+		}
+		.link-item {
+			padding: 10px 10px;
 		}
 		.intro {
-			font-size: 19px;
+			font-size: 18px;
 		}
 		.hello-btn {
 			font-size: 10px;

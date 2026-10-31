@@ -328,18 +328,21 @@ export class PixelWorldEngine {
 			x.fillRect(36, 12, 8, 8);
 		});
 
-		const castle2T = this.cv(80, 72, (x) => {
-			x.fillStyle = '#312e81';
-			x.fillRect(8, 24, 64, 48);
-			x.fillRect(24, 8, 32, 16);
-			for (let i = 0; i < 5; i++) x.fillRect(8 + i * 14, 16, 8, 8);
-			for (let i = 0; i < 3; i++) x.fillRect(24 + i * 12, 0, 8, 8);
+		const castle2T = this.cv(88, 80, (x) => {
 			x.fillStyle = '#1e1b4b';
-			for (let y = 31; y < 72; y += 8) x.fillRect(8, y, 64, 1);
-			x.fillStyle = '#000';
-			x.fillRect(32, 48, 16, 24);
-			x.fillRect(34, 44, 12, 4);
-			x.fillRect(36, 12, 8, 8);
+			x.fillRect(8, 24, 72, 56);
+			x.fillRect(24, 6, 40, 20);
+			for (let i = 0; i < 5; i++) x.fillRect(8 + i * 16, 14, 10, 10);
+			for (let i = 0; i < 3; i++) x.fillRect(24 + i * 16, 0, 10, 8);
+			x.fillStyle = '#312e81';
+			for (let y = 30; y < 80; y += 8) x.fillRect(8, y, 72, 1);
+			x.fillStyle = '#fbd000';
+			x.fillRect(38, 12, 12, 10);
+			x.fillRect(20, 34, 8, 12);
+			x.fillRect(60, 34, 8, 12);
+			x.fillStyle = '#000000';
+			x.fillRect(36, 52, 16, 28);
+			x.fillRect(38, 48, 12, 4);
 		});
 
 		this.cloudG = this.grp();
@@ -381,8 +384,8 @@ export class PixelWorldEngine {
 			this.mk(pipeT(h), 32, h, x, 32 + h / 2, 4, this.worldG);
 		});
 
-		this.castle1 = this.mk(castleT, 80, 72, 2340, 32 + 36, 4, this.worldG);
-		this.castle2 = this.mk(castle2T, 80, 72, 2520, 32 + 36, 4, this.worldG);
+		this.castle1 = this.mk(castleT, 80, 72, 2300, 32 + 36, 4, this.worldG);
+		this.castle2 = this.mk(castle2T, 88, 80, 2460, 32 + 40, 4, this.worldG);
 
 		this.qs = [];
 		[260, 760, 1260, 1760, 2160].forEach((x) => {
@@ -466,7 +469,12 @@ export class PixelWorldEngine {
 	};
 
 	public resize = () => {
-		this.S = window.innerWidth < 700 ? 2 : 3;
+		this.S =
+			window.innerWidth < 480
+				? 1.6
+				: window.innerWidth < 768
+					? 2.2
+					: 3;
 		this.W = 2 * Math.ceil(window.innerWidth / this.S / 2);
 		this.H = 2 * Math.ceil(window.innerHeight / this.S / 2);
 		this.renderer.setSize(this.W, this.H, false);
@@ -483,9 +491,11 @@ export class PixelWorldEngine {
 			this.bushG.position.y =
 				-this.H / 2;
 		this.cloudG.position.y = this.H / 2;
-		const baseX = 2320 + 2 * Math.round(0.08 * this.W);
+
+		const spacing = this.W < 280 ? 95 : this.W < 360 ? 120 : 160;
+		const baseX = 2240 + 2 * Math.round(0.04 * this.W);
 		this.castle1.position.x = baseX;
-		this.castle2.position.x = baseX + 190;
+		this.castle2.position.x = baseX + spacing;
 	};
 
 	private initScrollTriggers() {
@@ -582,8 +592,8 @@ export class PixelWorldEngine {
 		this.mario.material.opacity = 1;
 
 		const startX = this.mario.position.x;
-		const distance = Math.max(70, Math.abs(targetX - startX));
-		const duration = Math.min(2.0, Math.max(0.7, distance / 220));
+		const distance = Math.max(30, Math.abs(targetX - startX));
+		const duration = Math.min(2.0, Math.max(0.4, distance / 220));
 
 		gsap.to(this.mario.position, {
 			x: targetX,
@@ -613,7 +623,19 @@ export class PixelWorldEngine {
 		this.animId = requestAnimationFrame(this.loop);
 		this.t++;
 
-		this.camX += (this.st.p * 2400 - this.camX) * 0.18;
+		let targetCamX = this.st.p * 2400;
+		const castleMid = (this.castle1.position.x + this.castle2.position.x) / 2;
+
+		if (this.st.p > 0.88) {
+			targetCamX = castleMid;
+		}
+		if (this.currentCastle === 'castle2') {
+			targetCamX = this.castle2.position.x;
+		} else if (this.currentCastle === 'castle1') {
+			targetCamX = this.castle1.position.x;
+		}
+
+		this.camX += (targetCamX - this.camX) * 0.18;
 		const d = this.camX - this.prev;
 		this.prev = this.camX;
 		if (Math.abs(d) > 0.05) {
@@ -629,13 +651,14 @@ export class PixelWorldEngine {
 
 		if (!this.isEnteringCastle) {
 			if (this.currentCastle === 'outside') {
-				const mx = cx - Math.round(this.W * 0.25);
+				const stopX = this.castle1.position.x - 28;
+				const mx = Math.min(stopX, cx - Math.round(this.W * 0.25));
 				this.mario.position.x = mx;
 				this.mario.scale.x = 12 * this.dir;
 				this.mario.visible = true;
 				this.mario.material.opacity = 1;
 				this.mario.material.map =
-					this.t - this.moving < 8
+					this.t - this.moving < 8 && mx < stopX
 						? Math.floor(this.t / 5) % 2
 							? this.marioT.w1
 							: this.marioT.w2

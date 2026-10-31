@@ -193,16 +193,20 @@
 			display: flex;
 		}
 
-		nav a {
+		nav a,
+		nav a:visited {
 			width: 100%;
 			padding: 10px 12px;
 			background: rgba(255, 255, 255, 0.05);
 			border: 2px solid #000;
+			color: #ffffff !important;
+			text-decoration: none !important;
 		}
 
-		nav a:hover {
+		nav a:hover,
+		nav a:focus-visible {
 			background: #b5651d;
-			color: #fff;
+			color: #fbd000 !important;
 			border-color: #fbd000;
 		}
 	}
