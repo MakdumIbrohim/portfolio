@@ -101,7 +101,19 @@
 
 	@media (max-width: 600px) {
 		section {
-			padding-top: 100px;
+			padding: 90px 14px 140px;
+		}
+		.grid {
+			grid-template-columns: repeat(2, 1fr);
+			gap: 10px;
+		}
+		.item {
+			padding: 12px 6px;
+			font-size: 9px;
+		}
+		.item .ico {
+			font-size: 20px;
+			margin-bottom: 6px;
 		}
 	}
 </style>

@@ -91,7 +91,23 @@
 
 	@media (max-width: 600px) {
 		section {
-			padding-top: 100px;
+			padding: 90px 14px 140px;
+		}
+		.tl {
+			padding-left: 24px;
+			margin-left: 14px;
+		}
+		.tl .st::before {
+			left: -35px;
+			width: 16px;
+			height: 16px;
+			top: 8px;
+		}
+		.tl h3 {
+			font-size: 10px;
+		}
+		p {
+			font-size: 19px;
 		}
 	}
 </style>

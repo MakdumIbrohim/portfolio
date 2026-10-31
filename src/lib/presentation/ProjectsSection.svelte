@@ -123,7 +123,14 @@
 
 	@media (max-width: 600px) {
 		section {
-			padding-top: 100px;
+			padding: 90px 14px 140px;
+		}
+		.cards {
+			grid-template-columns: 1fr;
+			gap: 14px;
+		}
+		.card .th {
+			height: 90px;
 		}
 	}
 </style>

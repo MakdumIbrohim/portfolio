@@ -111,7 +111,16 @@
 
 	@media (max-width: 600px) {
 		section {
-			padding-top: 100px;
+			padding: 90px 14px 140px;
+		}
+		.links a {
+			font-size: 9px;
+			word-break: break-all;
+			padding: 10px 0;
+		}
+		.btn {
+			font-size: 10px;
+			padding: 12px 14px;
 		}
 	}
 </style>

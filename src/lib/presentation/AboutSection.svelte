@@ -59,7 +59,13 @@
 
 	@media (max-width: 600px) {
 		section {
-			padding-top: 100px;
+			padding: 90px 14px 140px;
+		}
+		.panel {
+			padding: 16px 14px;
+		}
+		p {
+			font-size: 19px;
 		}
 	}
 </style>
