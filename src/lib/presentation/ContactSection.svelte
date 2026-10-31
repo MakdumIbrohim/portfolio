@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { sound } from '../infrastructure/audio/retroAudio';
+
 	interface Props {
 		email: string;
 		github: string;
@@ -21,7 +23,7 @@
 			<a href={linkedin} target="_blank" rel="noreferrer">LinkedIn · /in/makdumibrohim</a>
 			<a href={instagram} target="_blank" rel="noreferrer">Instagram · @makdumibrohim</a>
 		</div>
-		<a class="btn" href="mailto:{email}">Say Hello</a>
+		<a class="btn" href="mailto:{email}" onclick={() => sound.playStageClear()}>Say Hello</a>
 	</div>
 </section>
 

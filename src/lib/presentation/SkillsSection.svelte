@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TechItem } from '../domain/portfolio';
+	import { sound } from '../infrastructure/audio/retroAudio';
 
 	interface Props {
 		items: TechItem[];
@@ -13,7 +14,10 @@
 	function handleItemClick(name: string, e: MouseEvent) {
 		if (!collected[name]) {
 			collected[name] = true;
+			sound.playPowerUp();
 			onItemClick(e);
+		} else {
+			sound.playBump();
 		}
 	}
 </script>

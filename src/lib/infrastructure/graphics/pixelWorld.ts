@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { sound } from '../audio/retroAudio';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -415,8 +416,12 @@ export class PixelWorldEngine {
 	}
 
 	public hit(b: THREE.Sprite) {
-		if (b.userData.cool) return;
+		if (b.userData.cool) {
+			sound.playBump();
+			return;
+		}
 		b.userData.cool = true;
+		sound.playCoin();
 		gsap.to(b.userData, { off: 6, duration: 0.1, yoyo: true, repeat: 1 });
 		this.onCoinBump();
 		this.popCoin(b.userData.x, b.userData.y);
@@ -563,6 +568,7 @@ export class PixelWorldEngine {
 			if (Math.abs(mx - s.userData.x) < 8) {
 				s.userData.got = true;
 				s.visible = false;
+				sound.playCoin();
 				this.onCoinBump();
 			}
 		});

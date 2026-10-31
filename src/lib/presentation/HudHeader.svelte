@@ -1,13 +1,25 @@
 <script lang="ts">
+	import { sound } from '../infrastructure/audio/retroAudio';
+
 	interface Props {
 		coins: number;
 	}
 
 	let { coins }: Props = $props();
+	let isMuted = $state(false);
+
+	function toggleAudio() {
+		isMuted = sound.toggleMute();
+	}
 </script>
 
 <header>
-	<span class="hud px">COIN ×<span>{String(coins).padStart(2, '0')}</span></span>
+	<div class="hud-left">
+		<span class="hud px">COIN ×<span>{String(coins).padStart(2, '0')}</span></span>
+		<button class="sound-btn px" onclick={toggleAudio} aria-label="Toggle Sound">
+			{isMuted ? '♪ OFF' : '♪ ON'}
+		</button>
+	</div>
 	<nav aria-label="Navigasi utama">
 		<a href="#home">Start</a>
 		<a href="#about">About</a>
@@ -35,8 +47,31 @@
 		border-bottom: 4px solid #000;
 	}
 
+	.hud-left {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
 	header .hud {
 		font: 10px 'Press Start 2P', monospace;
+		color: #ffffff;
+	}
+
+	.sound-btn {
+		font: 9px 'Press Start 2P', monospace;
+		background: #b5651d;
+		color: #fbd000;
+		border: 2px solid #000;
+		padding: 4px 8px;
+		cursor: pointer;
+		user-select: none;
+		transition: transform 0.08s;
+	}
+
+	.sound-btn:hover {
+		transform: translateY(-2px);
+		background: #43b047;
 		color: #ffffff;
 	}
 

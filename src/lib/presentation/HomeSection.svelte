@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { sound } from '../infrastructure/audio/retroAudio';
+
 	interface Props {
 		world: string;
 		name: string;
@@ -16,8 +18,8 @@
 		<p class="px subtitle">{title}</p>
 		<p class="bio">{bio}</p>
 		<div class="actions">
-			<a class="btn" href="#projects">View My Projects</a>
-			<a class="btn alt" href="#contact">Contact Me</a>
+			<a class="btn" href="#projects" onclick={() => sound.playJump()}>View My Projects</a>
+			<a class="btn alt" href="#contact" onclick={() => sound.playJump()}>Contact Me</a>
 		</div>
 	</div>
 </section>
