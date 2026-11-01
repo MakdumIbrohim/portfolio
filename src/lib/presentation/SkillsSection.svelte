@@ -10,6 +10,15 @@
 	let { items, onItemClick }: Props = $props();
 
 	let collected = $state<Record<string, boolean>>({});
+	let activeCategory = $state<'All' | 'Mobile & Frontend' | 'Backend & Database' | 'Tools & DevOps'>(
+		'All'
+	);
+
+	let filteredItems = $derived(
+		activeCategory === 'All'
+			? items
+			: items.filter((item) => item.category === activeCategory)
+	);
 
 	function handleItemClick(name: string, e: MouseEvent) {
 		if (!collected[name]) {
@@ -20,19 +29,58 @@
 			sound.playBump();
 		}
 	}
+
+	function selectCategory(cat: typeof activeCategory) {
+		activeCategory = cat;
+		sound.playJump();
+	}
 </script>
 
 <section id="skills">
 	<h2 class="rv">POWER-UPS · TEKNOLOGI</h2>
 	<p class="rv hint">Klik item untuk mengumpulkan koin.</p>
+
+	<div class="cat-tabs rv">
+		<button
+			type="button"
+			class="tab-btn px {activeCategory === 'All' ? 'active' : ''}"
+			onclick={() => selectCategory('All')}
+		>
+			ALL ({items.length})
+		</button>
+		<button
+			type="button"
+			class="tab-btn px {activeCategory === 'Mobile & Frontend' ? 'active' : ''}"
+			onclick={() => selectCategory('Mobile & Frontend')}
+		>
+			MOBILE & FRONTEND
+		</button>
+		<button
+			type="button"
+			class="tab-btn px {activeCategory === 'Backend & Database' ? 'active' : ''}"
+			onclick={() => selectCategory('Backend & Database')}
+		>
+			BACKEND & DB
+		</button>
+		<button
+			type="button"
+			class="tab-btn px {activeCategory === 'Tools & DevOps' ? 'active' : ''}"
+			onclick={() => selectCategory('Tools & DevOps')}
+		>
+			TOOLS & DEVOPS
+		</button>
+	</div>
+
 	<div class="grid rv" id="inv">
-		{#each items as item}
+		{#each filteredItems as item}
 			<button
+				type="button"
 				class="item {collected[item.name] ? 'got' : ''}"
 				onclick={(e) => handleItemClick(item.name, e)}
+				title={item.name}
 			>
 				<span class="ico">{@html item.icon}</span>
-				{item.name}
+				<span class="item-name">{item.name}</span>
 			</button>
 		{/each}
 	</div>
@@ -65,9 +113,44 @@
 		color: #ffffff;
 	}
 
+	.cat-tabs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-bottom: 20px;
+	}
+
+	.tab-btn {
+		font: 8px 'Press Start 2P', monospace;
+		background: #1a1a2e;
+		color: #ffffff;
+		border: 3px solid #000;
+		box-shadow: 0 4px 0 #000;
+		padding: 8px 12px;
+		cursor: pointer;
+		user-select: none;
+		line-height: 1.4;
+		transition:
+			transform 0.08s,
+			background 0.15s,
+			color 0.15s;
+	}
+
+	.tab-btn:hover {
+		transform: translateY(-2px);
+		border-color: #fbd000;
+		color: #fbd000;
+	}
+
+	.tab-btn.active {
+		background: #fbd000;
+		color: #000000;
+		border-color: #000000;
+	}
+
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 		gap: 14px;
 	}
 
@@ -81,7 +164,14 @@
 		cursor: pointer;
 		position: relative;
 		user-select: none;
-		transition: transform 0.1s;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 4px 0 #0006;
+		transition:
+			transform 0.1s,
+			background 0.15s;
 	}
 
 	.item:hover {
@@ -98,14 +188,19 @@
 	}
 
 	.item .ico :global(svg) {
-		width: 36px;
-		height: 36px;
+		width: 32px;
+		height: 32px;
 		display: block;
 		transition: transform 0.1s;
 	}
 
 	.item:hover .ico :global(svg) {
 		transform: scale(1.12);
+	}
+
+	.item-name {
+		word-break: break-word;
+		line-height: 1.4;
 	}
 
 	.item.got {
@@ -120,21 +215,28 @@
 		section {
 			padding: 70px 12px 100px;
 		}
+		.cat-tabs {
+			gap: 6px;
+		}
+		.tab-btn {
+			font-size: 7px;
+			padding: 6px 8px;
+		}
 		.grid {
 			grid-template-columns: repeat(2, 1fr);
 			gap: 10px;
 		}
 		.item {
-			padding: 14px 6px;
-			font-size: 9px;
+			padding: 12px 6px;
+			font-size: 8px;
 		}
 		.item .ico {
 			height: 36px;
 			margin-bottom: 8px;
 		}
 		.item .ico :global(svg) {
-			width: 30px;
-			height: 30px;
+			width: 28px;
+			height: 28px;
 		}
 	}
 </style>
