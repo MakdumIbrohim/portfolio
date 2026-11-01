@@ -41,7 +41,7 @@ export const PROFILE: RetroProfile = {
 		'Mulai tertarik pada software development sejak pertama kali memahami logika algoritma dan kepuasan merakit program dari baris-baris kode.',
 		'Saat ini aktif memperdalam arsitektur web modern, full-stack framework, serta dasar-dasar sistem terdistribusi.'
 	],
-	avatarUrl: '/avatar.png',
+	avatarUrl: '/avatar.svg',
 	email: 'makdumibrohim28@gmail.com',
 	github: 'https://github.com/makdumibrohim',
 	linkedin: 'https://www.linkedin.com/in/makdum-ibrohim/',
