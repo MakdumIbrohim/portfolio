@@ -25,12 +25,21 @@ export class PixelWorldEngine {
 
 	private castle1!: THREE.Sprite;
 	private castle2!: THREE.Sprite;
+	private castleSpacing = 160;
+	private castlePlaced = false;
+	private castleBaseX = 0;
+	private lockedLoopCamX = 0;
+	private isApproachingContact = false;
+
 	private mario!: THREE.Sprite;
 	private marioT: Record<string, THREE.CanvasTexture> = {};
 	private qs: THREE.Sprite[] = [];
 	private items: THREE.Sprite[] = [];
 	private coinT: THREE.CanvasTexture[] = [];
 	private mats: Record<number, THREE.SpriteMaterial> = {};
+
+	private readonly CHUNK_W = 1200;
+	private chunks: { originX: number; items: THREE.Sprite[] }[] = [];
 
 	private isEnteringCastle = false;
 	private currentCastle: 'outside' | 'castle1' | 'castle2' = 'outside';
@@ -54,7 +63,7 @@ export class PixelWorldEngine {
 	}
 
 	private init() {
-		this.S = window.innerWidth < 700 ? 2 : 3;
+		this.S = window.innerWidth < 480 ? 1.6 : window.innerWidth < 768 ? 2.2 : 3;
 		this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false });
 		this.renderer.setPixelRatio(1);
 
@@ -129,9 +138,6 @@ export class PixelWorldEngine {
 	}
 
 	private initTexturesAndSprites() {
-		const circ = (cx: number, cy: number, r: number) => (a: number, b: number) =>
-			(a - cx) ** 2 + (b - cy) ** 2 <= r * r;
-
 		const top = [
 			'....RRRRR...',
 			'...RRRRRRRRR',
@@ -365,14 +371,17 @@ export class PixelWorldEngine {
 		this.worldG = this.grp();
 		this.groundG = this.grp();
 
-		for (let i = 0; i < 26; i++) {
-			this.mk(cloudT, 32, 24, -1200 + i * 140, -30 - (i % 3) * 20, 1, this.cloudG);
+		for (let i = 0; i < 20; i++) {
+			const s = this.mk(cloudT, 32, 24, -800 + i * 160, -30 - (i % 3) * 20, 1, this.cloudG);
+			s.userData.baseX = -800 + i * 160;
+		}
+		for (let i = 0; i < 16; i++) {
+			const s = this.mk(hillT, 80, 40, -800 + i * 260, 20 + 32, 2, this.hillG);
+			s.userData.baseX = -800 + i * 260;
 		}
 		for (let i = 0; i < 18; i++) {
-			this.mk(hillT, 80, 40, -1200 + i * 260, 20 + 32, 2, this.hillG);
-		}
-		for (let i = 0; i < 22; i++) {
-			this.mk(bushT, 32, 16, -1200 + i * 300, 32 + 8, 3, this.bushG);
+			const s = this.mk(bushT, 32, 16, -800 + i * 280, 32 + 8, 3, this.bushG);
+			s.userData.baseX = -800 + i * 280;
 		}
 
 		const groundWidth = 6400;
@@ -386,54 +395,96 @@ export class PixelWorldEngine {
 			new THREE.PlaneGeometry(groundWidth, 32),
 			new THREE.MeshBasicMaterial({ map: gt, depthTest: false })
 		);
-		groundMesh.position.set(1700, 16, 0);
+		groundMesh.position.set(0, 16, 0);
 		groundMesh.renderOrder = 6;
 		this.groundG.add(groundMesh);
 
-		[
-			[600, 32],
-			[1500, 48],
-			[2000, 64]
-		].forEach(([x, h]) => {
-			this.mk(pipeT(h), 32, h, x, 32 + h / 2, 4, this.worldG);
-		});
-
-		this.castle1 = this.mk(castleT, 80, 72, 2300, 32 + 36, 4, this.worldG);
-		this.castle2 = this.mk(castle2T, 88, 80, 2460, 32 + 40, 4, this.worldG);
+		// 2 procedural looping chunks
+		this.chunks = [
+			{ originX: 0, items: [] },
+			{ originX: this.CHUNK_W, items: [] }
+		];
 
 		this.qs = [];
-		[260, 760, 1260, 1760].forEach((x) => {
-			this.mk(brickT, 16, 16, x - 16, 88, 5, this.worldG);
-			this.mk(brickT, 16, 16, x + 16, 88, 5, this.worldG);
-			const q = this.mk(qTex, 16, 16, x, 88, 5, this.worldG);
-			q.userData.cool = false;
-			this.qs.push(q);
-		});
-
 		this.items = [];
-		for (let i = 0; i < 11; i++) {
-			const x = 420 + i * 150;
-			const s = this.mk(
-				this.coinT[0],
-				8,
-				14,
-				x,
-				32 + 14 + Math.round(Math.sin(i * 0.9) * 16) + 20,
-				5,
-				this.worldG
-			);
-			s.userData.kind = 'coin';
-			s.userData.i = i;
-			this.items.push(s);
-		}
 
-		[1130, 1370].forEach((x) => {
-			const s = this.mk(mushT, 16, 16, x, 40, 5, this.worldG);
-			s.userData.kind = 'mush';
-			this.items.push(s);
+		this.chunks.forEach((chunk, chunkIdx) => {
+			// Pipes in chunk
+			[
+				[320, 32],
+				[720, 48],
+				[1080, 64]
+			].forEach(([relX, h]) => {
+				const pipe = this.mk(pipeT(h), 32, h, chunk.originX + relX, 32 + h / 2, 4, this.worldG);
+				pipe.userData.relX = relX;
+				pipe.userData.chunkIdx = chunkIdx;
+				chunk.items.push(pipe);
+			});
+
+			// Question blocks with bricks
+			[160, 540, 920].forEach((relX) => {
+				const bLeft = this.mk(brickT, 16, 16, chunk.originX + relX - 16, 88, 5, this.worldG);
+				bLeft.userData.relX = relX - 16;
+				bLeft.userData.chunkIdx = chunkIdx;
+				chunk.items.push(bLeft);
+
+				const bRight = this.mk(brickT, 16, 16, chunk.originX + relX + 16, 88, 5, this.worldG);
+				bRight.userData.relX = relX + 16;
+				bRight.userData.chunkIdx = chunkIdx;
+				chunk.items.push(bRight);
+
+				const q = this.mk(qTex, 16, 16, chunk.originX + relX, 88, 5, this.worldG);
+				q.userData.relX = relX;
+				q.userData.chunkIdx = chunkIdx;
+				q.userData.cool = false;
+				chunk.items.push(q);
+				this.qs.push(q);
+			});
+
+			// Coins
+			[80, 240, 400, 480, 640, 780, 860, 1000].forEach((relX, j) => {
+				const coinY = 32 + 14 + Math.round(Math.sin((j + chunkIdx * 3) * 0.9) * 16) + 20;
+				const coin = this.mk(this.coinT[0], 8, 14, chunk.originX + relX, coinY, 5, this.worldG);
+				coin.userData.relX = relX;
+				coin.userData.baseY = coinY;
+				coin.userData.kind = 'coin';
+				coin.userData.i = j;
+				coin.userData.chunkIdx = chunkIdx;
+				chunk.items.push(coin);
+				this.items.push(coin);
+			});
+
+			// Mushroom
+			const mush = this.mk(mushT, 16, 16, chunk.originX + 440, 40, 5, this.worldG);
+			mush.userData.relX = 440;
+			mush.userData.baseY = 40;
+			mush.userData.kind = 'mush';
+			mush.userData.chunkIdx = chunkIdx;
+			chunk.items.push(mush);
+			this.items.push(mush);
 		});
+
+		// Final Stage Castles (hidden during stage loop, revealed on contact approach)
+		this.castle1 = this.mk(castleT, 80, 72, 99999, 32 + 36, 4, this.worldG);
+		this.castle2 = this.mk(castle2T, 88, 80, 99999 + this.castleSpacing, 32 + 40, 4, this.worldG);
+		this.castle1.visible = false;
+		this.castle2.visible = false;
 
 		this.mario = this.mk(this.marioT.stand, 12, 16, 0, 40, 8, this.worldG);
+	}
+
+	private updateChunk(chunk: { originX: number; items: THREE.Sprite[] }) {
+		chunk.items.forEach((s) => {
+			const wx = chunk.originX + s.userData.relX;
+			s.position.x = s.userData.x = wx;
+			if (s.userData.kind === 'coin') {
+				s.userData.got = false;
+				s.visible = true;
+			}
+			if (s.userData.cool !== undefined) {
+				s.userData.cool = false;
+			}
+		});
 	}
 
 	private popCoin(x: number, y: number) {
@@ -461,7 +512,7 @@ export class PixelWorldEngine {
 		sound.playCoin();
 		gsap.to(b.userData, { off: 6, duration: 0.1, yoyo: true, repeat: 1 });
 		this.onCoinBump();
-		this.popCoin(b.userData.x, b.userData.y);
+		this.popCoin(b.position.x, b.position.y);
 	}
 
 	private onPointerDown = (e: MouseEvent) => {
@@ -471,7 +522,7 @@ export class PixelWorldEngine {
 		const wx = Math.round(this.camX) + (e.clientX / this.S - this.W / 2);
 		const wy = this.H - e.clientY / this.S;
 		this.qs.forEach((b) => {
-			if (Math.abs(wx - b.userData.x) < 10 && Math.abs(wy - b.userData.y) < 10) {
+			if (b.visible && Math.abs(wx - b.position.x) < 12 && Math.abs(wy - b.position.y) < 12) {
 				this.hit(b);
 			}
 		});
@@ -483,12 +534,7 @@ export class PixelWorldEngine {
 	};
 
 	public resize = () => {
-		this.S =
-			window.innerWidth < 480
-				? 1.6
-				: window.innerWidth < 768
-					? 2.2
-					: 3;
+		this.S = window.innerWidth < 480 ? 1.6 : window.innerWidth < 768 ? 2.2 : 3;
 		this.W = 2 * Math.ceil(window.innerWidth / this.S / 2);
 		this.H = 2 * Math.ceil(window.innerHeight / this.S / 2);
 		this.renderer.setSize(this.W, this.H, false);
@@ -506,10 +552,10 @@ export class PixelWorldEngine {
 				-this.H / 2;
 		this.cloudG.position.y = this.H / 2;
 
-		const spacing = this.W < 280 ? 95 : this.W < 360 ? 120 : 160;
-		const baseX = 2240 + 2 * Math.round(0.04 * this.W);
-		this.castle1.position.x = baseX;
-		this.castle2.position.x = baseX + spacing;
+		this.castleSpacing = this.W < 280 ? 95 : this.W < 360 ? 120 : 160;
+		if (this.castlePlaced) {
+			this.castle2.position.x = this.castle1.position.x + this.castleSpacing;
+		}
 	};
 
 	private initScrollTriggers() {
@@ -637,17 +683,83 @@ export class PixelWorldEngine {
 		this.animId = requestAnimationFrame(this.loop);
 		this.t++;
 
-		const castleMid = (this.castle1.position.x + this.castle2.position.x) / 2;
-		let targetCamX = this.st.p * castleMid;
+		// Distance detection algorithm to #contact
+		const contactEl = typeof document !== 'undefined' ? document.getElementById('contact') : null;
+		let contactProgress = 0;
 
+		if (contactEl) {
+			const rect = contactEl.getBoundingClientRect();
+			const vh = window.innerHeight;
+			if (rect.top <= vh * 1.15) {
+				contactProgress = Math.max(0, Math.min(1, (vh * 1.15 - rect.top) / (vh * 0.95)));
+			}
+		}
+
+		let targetCamX = 0;
+
+		if (contactProgress <= 0) {
+			// 1. STAGE LOOP PHASE (Home, About, Skills, Projects, Journey)
+			if (this.castlePlaced) {
+				this.castlePlaced = false;
+				this.castle1.visible = false;
+				this.castle2.visible = false;
+				this.chunks.forEach((chunk) => {
+					chunk.items.forEach((s) => {
+						if (!s.userData.got) s.visible = true;
+					});
+				});
+			}
+
+			// Scroll-driven camera advancement
+			targetCamX = (typeof window !== 'undefined' ? window.scrollY : 0) * 0.65;
+
+			// Recycle chunks that have fallen behind or ahead
+			this.chunks.forEach((chunk) => {
+				if (this.camX > chunk.originX + this.CHUNK_W + 160) {
+					chunk.originX += 2 * this.CHUNK_W;
+					this.updateChunk(chunk);
+				} else if (this.camX < chunk.originX - 160) {
+					chunk.originX -= 2 * this.CHUNK_W;
+					this.updateChunk(chunk);
+				}
+			});
+		} else {
+			// 2. CONTACT ARRIVAL PHASE (Looping halted, castles rendered on track ahead)
+			if (!this.castlePlaced) {
+				this.castlePlaced = true;
+				this.lockedLoopCamX = this.camX;
+				const baseX = Math.round(this.camX + this.W * 0.45 + 110);
+				this.castleBaseX = baseX;
+				this.castle1.position.x = baseX;
+				this.castle2.position.x = baseX + this.castleSpacing;
+				this.castle1.visible = true;
+				this.castle2.visible = true;
+
+				// Clear away loop obstacles from the castle runway
+				this.chunks.forEach((chunk) => {
+					chunk.items.forEach((s) => {
+						if (s.position.x > baseX - 45) {
+							s.visible = false;
+						}
+					});
+				});
+			}
+
+			const castleMid = (this.castle1.position.x + this.castle2.position.x) / 2;
+			const ease = 1 - Math.pow(1 - contactProgress, 3);
+			targetCamX = this.lockedLoopCamX + (castleMid - this.lockedLoopCamX) * ease;
+		}
+
+		// Castle interaction overrides
 		if (this.currentCastle === 'castle2') {
 			targetCamX = this.castle2.position.x;
 		} else if (this.currentCastle === 'castle1') {
 			targetCamX = this.castle1.position.x;
 		}
 
-		const step = (targetCamX - this.camX) * 0.18;
-		const maxStep = 12;
+		// Smooth camera tracking with strict velocity clamping
+		const step = (targetCamX - this.camX) * 0.16;
+		const maxStep = 9;
 		this.camX += Math.max(-maxStep, Math.min(maxStep, step));
 		const d = this.camX - this.prev;
 		this.prev = this.camX;
@@ -658,30 +770,65 @@ export class PixelWorldEngine {
 
 		const cx = Math.round(this.camX);
 		this.cam.position.x = cx;
-		this.cloudG.position.x = Math.round(this.camX * 0.7);
-		this.hillG.position.x = Math.round(this.camX * 0.5);
-		this.bushG.position.x = Math.round(this.camX * 0.2);
 
+		// Infinite ground tracking
+		this.groundG.position.x = Math.round(this.camX / 16) * 16;
+
+		// Background parallax wrapping
+		this.cloudG.position.x = cx;
+		this.hillG.position.x = cx;
+		this.bushG.position.x = cx;
+
+		const wrapSpan = Math.max(1600, this.W * 2);
+
+		this.cloudG.children.forEach((c) => {
+			const rel =
+				((c.userData.baseX - this.camX * 0.4) % wrapSpan + wrapSpan) % wrapSpan - wrapSpan / 2;
+			c.position.x = Math.round(rel);
+		});
+
+		this.hillG.children.forEach((h) => {
+			const rel =
+				((h.userData.baseX - this.camX * 0.6) % wrapSpan + wrapSpan) % wrapSpan - wrapSpan / 2;
+			h.position.x = Math.round(rel);
+		});
+
+		this.bushG.children.forEach((b) => {
+			const rel =
+				((b.userData.baseX - this.camX * 0.8) % wrapSpan + wrapSpan) % wrapSpan - wrapSpan / 2;
+			b.position.x = Math.round(rel);
+		});
+
+		// Mario position and animation
 		if (!this.isEnteringCastle) {
 			if (this.currentCastle === 'outside') {
-				const stopX = this.castle1.position.x - 28;
-				const mx = Math.min(stopX, cx - Math.round(this.W * 0.25));
+				let mx = cx - Math.round(this.W * 0.25);
+				let isAtCastleStop = false;
+
+				if (this.castlePlaced) {
+					const stopX = this.castle1.position.x - 30;
+					if (mx >= stopX) {
+						mx = stopX;
+						isAtCastleStop = true;
+					}
+				}
+
 				this.mario.position.x = mx;
 				this.mario.scale.x = 12 * this.dir;
 				this.mario.visible = true;
 				this.mario.material.opacity = 1;
 
-				// Calculate jump arc for floating coins and ? blocks
+				// Calculate jump arc
 				let jumpY = 0;
 				const jumpRadius = 38;
 
-				if (mx < stopX - 6) {
+				if (!isAtCastleStop) {
 					this.items.forEach((s) => {
-						if (s.userData.kind === 'coin') {
-							const dx = Math.abs(mx - s.userData.x);
+						if (s.visible && s.userData.kind === 'coin') {
+							const dx = Math.abs(mx - s.position.x);
 							if (dx < jumpRadius) {
-								const peakH = Math.max(0, s.userData.y - 40);
-								const p = (mx - (s.userData.x - jumpRadius)) / (2 * jumpRadius);
+								const peakH = Math.max(0, s.userData.baseY - 40);
+								const p = (mx - (s.position.x - jumpRadius)) / (2 * jumpRadius);
 								const h = peakH * Math.sin(p * Math.PI);
 								if (h > jumpY) jumpY = h;
 							}
@@ -689,19 +836,20 @@ export class PixelWorldEngine {
 					});
 
 					this.qs.forEach((q) => {
-						const dx = Math.abs(mx - q.userData.x);
-						if (dx < 32) {
-							const peakH = 32;
-							const p = (mx - (q.userData.x - 32)) / 64;
-							const h = peakH * Math.sin(p * Math.PI);
-							if (h > jumpY) jumpY = h;
+						if (q.visible) {
+							const dx = Math.abs(mx - q.position.x);
+							if (dx < 32) {
+								const peakH = 32;
+								const p = (mx - (q.position.x - 32)) / 64;
+								const h = peakH * Math.sin(p * Math.PI);
+								if (h > jumpY) jumpY = h;
+							}
 						}
 					});
 				}
 
 				this.mario.position.y = 40 + Math.round(jumpY);
 
-				// Sound trigger on takeoff
 				if (jumpY > 4 && !this.wasJumping && this.t - this.moving < 8) {
 					sound.playJump();
 					this.wasJumping = true;
@@ -713,7 +861,7 @@ export class PixelWorldEngine {
 					this.mario.material.map = this.marioT.jump;
 				} else {
 					this.mario.material.map =
-						this.t - this.moving < 8 && mx < stopX
+						this.t - this.moving < 8 && !isAtCastleStop
 							? Math.floor(this.t / 5) % 2
 								? this.marioT.w1
 								: this.marioT.w2
@@ -721,22 +869,26 @@ export class PixelWorldEngine {
 				}
 			} else {
 				this.mario.visible = false;
-				if (this.st.p < 0.72) {
+				if (contactProgress < 0.3) {
 					this.currentCastle = 'outside';
 					this.mario.visible = true;
 					this.mario.material.opacity = 1;
 				}
 			}
 
+			// Check block hits
 			this.qs.forEach((b) => {
-				const dx = Math.abs(this.mario.position.x - b.userData.x);
-				if (dx < 8 && this.mario.position.y >= 64 && this.mario.visible) this.hit(b);
-				else if (dx > 40) b.userData.cool = false;
-				b.position.y = b.userData.y + Math.round(b.userData.off);
+				if (b.visible) {
+					const dx = Math.abs(this.mario.position.x - b.position.x);
+					if (dx < 8 && this.mario.position.y >= 64 && this.mario.visible) this.hit(b);
+					else if (dx > 40) b.userData.cool = false;
+					b.position.y = b.userData.y + Math.round(b.userData.off);
+				}
 			});
 
+			// Check item collections
 			this.items.forEach((s) => {
-				if (s.userData.got) return;
+				if (!s.visible || s.userData.got) return;
 				if (s.userData.kind === 'coin') {
 					const frame = (Math.floor(this.t / 8) + s.userData.i) % 4;
 					s.material =
@@ -747,8 +899,8 @@ export class PixelWorldEngine {
 							depthTest: false
 						}));
 				}
-				const dx = Math.abs(this.mario.position.x - s.userData.x);
-				const dy = Math.abs(this.mario.position.y - s.userData.y);
+				const dx = Math.abs(this.mario.position.x - s.position.x);
+				const dy = Math.abs(this.mario.position.y - s.position.y);
 				if (dx < 12 && dy < 16 && this.mario.visible) {
 					s.userData.got = true;
 					s.visible = false;

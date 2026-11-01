@@ -71,7 +71,7 @@
 	}
 
 	.hero-card {
-		max-width: 680px;
+		max-width: 780px;
 	}
 
 	.p1-badge {
@@ -107,7 +107,7 @@
 	.hero-content {
 		display: flex;
 		align-items: flex-start;
-		gap: 24px;
+		gap: 26px;
 	}
 
 	.avatar-box {
@@ -119,12 +119,12 @@
 	}
 
 	.avatar-frame {
-		width: 112px;
-		height: 112px;
+		width: 180px;
+		height: 180px;
 		background: #000000;
 		border: 4px solid #000000;
 		outline: 3px solid #fbd000;
-		box-shadow: 4px 4px 0 #000000;
+		box-shadow: 6px 6px 0 #000000;
 		overflow: hidden;
 		position: relative;
 	}
@@ -133,15 +133,15 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		object-position: center;
 		display: block;
-		image-rendering: pixelated;
 	}
 
 	.avatar-caption {
-		font-size: 8px;
+		font-size: 9px;
 		color: #43b047;
 		background: #1a1a2e;
-		padding: 3px 6px;
+		padding: 4px 8px;
 		border: 2px solid #000;
 	}
 
@@ -232,8 +232,8 @@
 			gap: 16px;
 		}
 		.avatar-frame {
-			width: 96px;
-			height: 96px;
+			width: 150px;
+			height: 150px;
 		}
 		.hero-info {
 			display: flex;
