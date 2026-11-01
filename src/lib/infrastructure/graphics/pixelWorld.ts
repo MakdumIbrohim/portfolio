@@ -151,30 +151,25 @@ export class PixelWorldEngine {
 			stand: ['..BBB..BBB..', '.BBBB..BBBB.', 'BBBB....BBBB'],
 			w1: ['...BBBBB....', '..BBBBBBB...', '..BBB..BBBB.'],
 			w2: ['....BBBBB...', '...BBBBBBB..', '..BBBB..BBB.'],
-			jump: ['.BBBBBBBBB..', 'BBBBBBBBBBBB', 'BBBB....BBBB']
+			jump: ['..BBBB..BBB.', '.BBBB....BBB', 'BBBB........']
 		};
 
-		const jumpTop = [
-			'..SS.RRRRR..',
-			'..SSRRRRRRRR',
-			'...SBBBSSBS.',
-			'...BSBSSSBSS',
-			'...BSBBSSSBS',
-			'....SSSSBBBB',
-			'....SSSSSSS.',
-			'...RRBRR....',
-			'..RRRBRRR...',
+		const jumpBody = [
+			'...RRBRRB.SS',
+			'..RRRBRRBRSS',
 			'.RRRRBBBBRRR',
-			'..RBYBBYBRSS',
-			'..SBBBBBBSSS',
-			'..SBBBBBBBSS'
+			'SSRBYBBYBR..',
+			'SS.BBBBBB...',
+			'.S.BBBBBB...'
 		];
+
+		const jumpRows = top.slice(0, 7).concat(jumpBody, legs.jump);
 
 		this.marioT = {
 			stand: this.fromMap(top.concat(legs.stand), 12),
 			w1: this.fromMap(top.concat(legs.w1), 12),
 			w2: this.fromMap(top.concat(legs.w2), 12),
-			jump: this.fromMap(jumpTop.concat(legs.jump), 12)
+			jump: this.fromMap(jumpRows, 12)
 		};
 
 		this.coinT = [8, 6, 2, 6].map((w) =>
