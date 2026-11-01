@@ -62,6 +62,7 @@
 
 <svelte:head>
 	<title>{PROFILE.name} – {PROFILE.title}</title>
+	<meta name="description" content="{PROFILE.bio}" />
 </svelte:head>
 
 <LoadingScreen />
