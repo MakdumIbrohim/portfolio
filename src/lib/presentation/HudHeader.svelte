@@ -104,9 +104,9 @@
 
 	.sound-btn {
 		font: 9px 'Press Start 2P', monospace;
-		background: #b5651d;
+		background: #242442;
 		color: #fbd000;
-		border: 2px solid #000;
+		border: 2px solid #fbd000;
 		padding: 5px 8px;
 		cursor: pointer;
 		user-select: none;
@@ -121,8 +121,9 @@
 
 	.sound-btn:hover {
 		transform: translateY(-2px);
-		background: #43b047;
-		color: #ffffff;
+		background: #fbd000;
+		color: #000000;
+		border-color: #000000;
 	}
 
 	.hud-icon {
@@ -205,7 +206,7 @@
 
 		nav a:hover,
 		nav a:focus-visible {
-			background: #b5651d;
+			background: #2a2a4e;
 			color: #fbd000 !important;
 			border-color: #fbd000;
 		}

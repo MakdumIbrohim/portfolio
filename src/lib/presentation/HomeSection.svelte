@@ -210,12 +210,12 @@
 	}
 
 	.btn.alt {
-		background: #43b047;
-		box-shadow: 0 6px 0 #1f6b24;
+		background: #1b7a20;
+		box-shadow: 0 6px 0 #0d4a11;
 	}
 
 	.btn.alt:hover {
-		box-shadow: 0 3px 0 #1f6b24;
+		box-shadow: 0 3px 0 #0d4a11;
 	}
 
 	@media (max-width: 600px) {

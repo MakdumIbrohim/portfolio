@@ -182,8 +182,8 @@
 
 	.enter-badge {
 		font: 8px 'Press Start 2P', monospace;
-		background: #b5651d;
-		color: #fff;
+		background: #8c3e06;
+		color: #ffffff;
 		padding: 6px 8px;
 		border: 2px solid #000;
 		white-space: nowrap;
@@ -191,7 +191,7 @@
 	}
 
 	.link-item:hover .enter-badge {
-		background: #43b047;
+		background: #1b7a20;
 	}
 
 	.hello-btn {

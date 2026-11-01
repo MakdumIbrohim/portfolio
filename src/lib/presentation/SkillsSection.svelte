@@ -155,7 +155,7 @@
 	}
 
 	.item {
-		background: #b5651d;
+		background: #8c3e06;
 		border: 4px solid #000;
 		padding: 14px 8px;
 		text-align: center;
@@ -204,7 +204,7 @@
 	}
 
 	.item.got {
-		background: #43b047;
+		background: #1b7a20;
 	}
 
 	.item.got .ico {
