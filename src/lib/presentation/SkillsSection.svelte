@@ -92,14 +92,14 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 34px;
-		margin-bottom: 8px;
+		height: 44px;
+		margin-bottom: 10px;
 		color: #fbd000;
 	}
 
 	.item .ico :global(svg) {
-		width: 28px;
-		height: 28px;
+		width: 36px;
+		height: 36px;
 		display: block;
 		transition: transform 0.1s;
 	}
@@ -125,16 +125,16 @@
 			gap: 10px;
 		}
 		.item {
-			padding: 12px 6px;
+			padding: 14px 6px;
 			font-size: 9px;
 		}
 		.item .ico {
-			height: 28px;
-			margin-bottom: 6px;
+			height: 36px;
+			margin-bottom: 8px;
 		}
 		.item .ico :global(svg) {
-			width: 22px;
-			height: 22px;
+			width: 30px;
+			height: 30px;
 		}
 	}
 </style>
