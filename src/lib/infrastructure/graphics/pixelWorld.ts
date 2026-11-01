@@ -157,7 +157,9 @@ export class PixelWorldEngine {
 			stand: ['..BBB..BBB..', '.BBBB..BBBB.', 'BBBB....BBBB'],
 			w1: ['...BBBBB....', '..BBBBBBB...', '..BBB..BBBB.'],
 			w2: ['....BBBBB...', '...BBBBBBB..', '..BBBB..BBB.'],
-			jump: ['..BBBB..BBB.', '.BBBB....BBB', 'BBBB........']
+			jump: ['..BBBB..BBB.', '.BBBB....BBB', 'BBBB........'],
+			apex: ['..BBBBBBBB..', '..BBBBBBBB..', '..BB....BB..'],
+			fall: ['...BB..BB...', '..BBBB.BBBB.', '..BBBB.BBBB.']
 		};
 
 		const jumpBody = [
@@ -169,13 +171,33 @@ export class PixelWorldEngine {
 			'.S.BBBBBB...'
 		];
 
-		const jumpRows = top.slice(0, 7).concat(jumpBody, legs.jump);
+		const apexBody = [
+			'...RRBRRB...',
+			'SSRRRBRRBRSS',
+			'SSRRRBBBBRSS',
+			'.SRBYBBYBRS.',
+			'...BBBBBB...',
+			'...BBBBBB...'
+		];
+
+		const fallBody = [
+			'SS.RRBRRB.SS',
+			'.SSRRBRRBRS.',
+			'..RRRBBBBRRR',
+			'...BYBBYB...',
+			'...BBBBBB...',
+			'...BBBBBB...'
+		];
+
+		const headRows = top.slice(0, 7);
 
 		this.marioT = {
 			stand: this.fromMap(top.concat(legs.stand), 12),
 			w1: this.fromMap(top.concat(legs.w1), 12),
 			w2: this.fromMap(top.concat(legs.w2), 12),
-			jump: this.fromMap(jumpRows, 12)
+			jump: this.fromMap(headRows.concat(jumpBody, legs.jump), 12),
+			apex: this.fromMap(headRows.concat(apexBody, legs.apex), 12),
+			fall: this.fromMap(headRows.concat(fallBody, legs.fall), 12)
 		};
 
 		this.coinT = [8, 6, 2, 6].map((w) =>
@@ -818,9 +840,10 @@ export class PixelWorldEngine {
 				this.mario.visible = true;
 				this.mario.material.opacity = 1;
 
-				// Calculate jump arc
+				// Calculate jump arc with smooth cosine bell curve and generous span
 				let jumpY = 0;
-				const jumpRadius = 38;
+				let jumpProgress = 0;
+				const jumpRadius = 48;
 
 				if (!isAtCastleStop) {
 					this.items.forEach((s) => {
@@ -829,8 +852,12 @@ export class PixelWorldEngine {
 							if (dx < jumpRadius) {
 								const peakH = Math.max(0, s.userData.baseY - 40);
 								const p = (mx - (s.position.x - jumpRadius)) / (2 * jumpRadius);
-								const h = peakH * Math.sin(p * Math.PI);
-								if (h > jumpY) jumpY = h;
+								const bell = 0.5 - 0.5 * Math.cos(2 * p * Math.PI);
+								const h = peakH * bell;
+								if (h > jumpY) {
+									jumpY = h;
+									jumpProgress = p;
+								}
 							}
 						}
 					});
@@ -838,27 +865,44 @@ export class PixelWorldEngine {
 					this.qs.forEach((q) => {
 						if (q.visible) {
 							const dx = Math.abs(mx - q.position.x);
-							if (dx < 32) {
-								const peakH = 32;
-								const p = (mx - (q.position.x - 32)) / 64;
-								const h = peakH * Math.sin(p * Math.PI);
-								if (h > jumpY) jumpY = h;
+							if (dx < 36) {
+								const peakH = 34;
+								const p = (mx - (q.position.x - 36)) / 72;
+								const bell = 0.5 - 0.5 * Math.cos(2 * p * Math.PI);
+								const h = peakH * bell;
+								if (h > jumpY) {
+									jumpY = h;
+									jumpProgress = p;
+								}
 							}
 						}
 					});
 				}
 
-				this.mario.position.y = 40 + Math.round(jumpY);
+				const targetY = 40 + jumpY;
+				// Smooth vertical interpolation prevents hard snaps or sudden drops
+				this.mario.position.y += (targetY - this.mario.position.y) * 0.42;
 
-				if (jumpY > 4 && !this.wasJumping && this.t - this.moving < 8) {
+				const curElev = this.mario.position.y - 40;
+
+				if (curElev > 4 && !this.wasJumping && this.t - this.moving < 8) {
 					sound.playJump();
 					this.wasJumping = true;
-				} else if (jumpY <= 2) {
+				} else if (curElev <= 2) {
 					this.wasJumping = false;
 				}
 
-				if (jumpY > 4) {
-					this.mario.material.map = this.marioT.jump;
+				if (curElev > 3) {
+					if (jumpProgress < 0.38) {
+						// 1. Fase naik (Rise / Punch up)
+						this.mario.material.map = this.marioT.jump;
+					} else if (jumpProgress <= 0.62) {
+						// 2. Fase puncak melayang (Apex float / hover transition)
+						this.mario.material.map = this.marioT.apex;
+					} else {
+						// 3. Fase meluncur turun (Smooth fall descent)
+						this.mario.material.map = this.marioT.fall;
+					}
 				} else {
 					this.mario.material.map =
 						this.t - this.moving < 8 && !isAtCastleStop
