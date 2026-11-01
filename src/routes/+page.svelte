@@ -76,6 +76,7 @@
 		name={PROFILE.name}
 		title={PROFILE.title}
 		bio={PROFILE.bio}
+		avatarUrl={PROFILE.avatarUrl}
 	/>
 
 	<AboutSection about={PROFILE.about} />
@@ -91,6 +92,7 @@
 		github={PROFILE.github}
 		linkedin={PROFILE.linkedin}
 		instagram={PROFILE.instagram}
+		duolingo={PROFILE.duolingo}
 		onConnect={handleConnect}
 	/>
 </main>

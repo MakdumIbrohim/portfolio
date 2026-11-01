@@ -23,10 +23,12 @@ export interface RetroProfile {
 	world: string;
 	bio: string;
 	about: string[];
+	avatarUrl?: string;
 	email: string;
 	github: string;
 	linkedin: string;
 	instagram: string;
+	duolingo: string;
 }
 
 export const PROFILE: RetroProfile = {
@@ -39,10 +41,12 @@ export const PROFILE: RetroProfile = {
 		'Mulai tertarik pada software development sejak pertama kali memahami logika algoritma dan kepuasan merakit program dari baris-baris kode.',
 		'Saat ini aktif memperdalam arsitektur web modern, full-stack framework, serta dasar-dasar sistem terdistribusi.'
 	],
-	email: 'makdumibrohim@gmail.com',
+	avatarUrl: '/avatar.png',
+	email: 'makdumibrohim28@gmail.com',
 	github: 'https://github.com/makdumibrohim',
-	linkedin: 'https://linkedin.com/in/makdumibrohim',
-	instagram: 'https://instagram.com/makdumibrohim'
+	linkedin: 'https://www.linkedin.com/in/makdum-ibrohim/',
+	instagram: 'https://www.instagram.com/mkdmibrhm_',
+	duolingo: 'https://www.duolingo.com/profile/makdumibrohim'
 };
 
 export const TECH_ITEMS: TechItem[] = [
