@@ -26,8 +26,8 @@
 	let contacts = $derived([
 		{ label: 'Email', val: email, url: `mailto:${email}`, icon: emailSvg },
 		{ label: 'GitHub', val: '@makdumibrohim', url: github, icon: githubSvg },
-		{ label: 'LinkedIn', val: '/in/makdumibrohim', url: linkedin, icon: linkedinSvg },
-		{ label: 'Instagram', val: '@makdumibrohim', url: instagram, icon: instagramSvg },
+		{ label: 'LinkedIn', val: '/in/makdum-ibrohim', url: linkedin, icon: linkedinSvg },
+		{ label: 'Instagram', val: '@mkdmibrhm_', url: instagram, icon: instagramSvg },
 		{ label: 'Duolingo', val: '@makdumibrohim', url: duolingo, icon: duolingoSvg }
 	]);
 </script>
