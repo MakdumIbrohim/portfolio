@@ -402,7 +402,7 @@ export class PixelWorldEngine {
 		this.castle2 = this.mk(castle2T, 88, 80, 2460, 32 + 40, 4, this.worldG);
 
 		this.qs = [];
-		[260, 760, 1260, 1760, 2160].forEach((x) => {
+		[260, 760, 1260, 1760].forEach((x) => {
 			this.mk(brickT, 16, 16, x - 16, 88, 5, this.worldG);
 			this.mk(brickT, 16, 16, x + 16, 88, 5, this.worldG);
 			const q = this.mk(qTex, 16, 16, x, 88, 5, this.worldG);
@@ -411,7 +411,7 @@ export class PixelWorldEngine {
 		});
 
 		this.items = [];
-		for (let i = 0; i < 14; i++) {
+		for (let i = 0; i < 11; i++) {
 			const x = 420 + i * 150;
 			const s = this.mk(
 				this.coinT[0],
@@ -676,27 +676,29 @@ export class PixelWorldEngine {
 				let jumpY = 0;
 				const jumpRadius = 38;
 
-				this.items.forEach((s) => {
-					if (s.userData.kind === 'coin') {
-						const dx = Math.abs(mx - s.userData.x);
-						if (dx < jumpRadius) {
-							const peakH = Math.max(0, s.userData.y - 40);
-							const p = (mx - (s.userData.x - jumpRadius)) / (2 * jumpRadius);
+				if (mx < stopX - 6) {
+					this.items.forEach((s) => {
+						if (s.userData.kind === 'coin') {
+							const dx = Math.abs(mx - s.userData.x);
+							if (dx < jumpRadius) {
+								const peakH = Math.max(0, s.userData.y - 40);
+								const p = (mx - (s.userData.x - jumpRadius)) / (2 * jumpRadius);
+								const h = peakH * Math.sin(p * Math.PI);
+								if (h > jumpY) jumpY = h;
+							}
+						}
+					});
+
+					this.qs.forEach((q) => {
+						const dx = Math.abs(mx - q.userData.x);
+						if (dx < 32) {
+							const peakH = 32;
+							const p = (mx - (q.userData.x - 32)) / 64;
 							const h = peakH * Math.sin(p * Math.PI);
 							if (h > jumpY) jumpY = h;
 						}
-					}
-				});
-
-				this.qs.forEach((q) => {
-					const dx = Math.abs(mx - q.userData.x);
-					if (dx < 32) {
-						const peakH = 32;
-						const p = (mx - (q.userData.x - 32)) / 64;
-						const h = peakH * Math.sin(p * Math.PI);
-						if (h > jumpY) jumpY = h;
-					}
-				});
+					});
+				}
 
 				this.mario.position.y = 40 + Math.round(jumpY);
 
