@@ -34,6 +34,7 @@ export class PixelWorldEngine {
 
 	private isEnteringCastle = false;
 	private currentCastle: 'outside' | 'castle1' | 'castle2' = 'outside';
+	private wasJumping = false;
 
 	private st = { p: 0, sky: new THREE.Color('#5c94fc') };
 	private camX = 0;
@@ -149,13 +150,31 @@ export class PixelWorldEngine {
 		const legs = {
 			stand: ['..BBB..BBB..', '.BBBB..BBBB.', 'BBBB....BBBB'],
 			w1: ['...BBBBB....', '..BBBBBBB...', '..BBB..BBBB.'],
-			w2: ['....BBBBB...', '...BBBBBBB..', '..BBBB..BBB.']
+			w2: ['....BBBBB...', '...BBBBBBB..', '..BBBB..BBB.'],
+			jump: ['.BBBBBBBBB..', 'BBBBBBBBBBBB', 'BBBB....BBBB']
 		};
+
+		const jumpTop = [
+			'..SS.RRRRR..',
+			'..SSRRRRRRRR',
+			'...SBBBSSBS.',
+			'...BSBSSSBSS',
+			'...BSBBSSSBS',
+			'....SSSSBBBB',
+			'....SSSSSSS.',
+			'...RRBRR....',
+			'..RRRBRRR...',
+			'.RRRRBBBBRRR',
+			'..RBYBBYBRSS',
+			'..SBBBBBBSSS',
+			'..SBBBBBBBSS'
+		];
 
 		this.marioT = {
 			stand: this.fromMap(top.concat(legs.stand), 12),
 			w1: this.fromMap(top.concat(legs.w1), 12),
-			w2: this.fromMap(top.concat(legs.w2), 12)
+			w2: this.fromMap(top.concat(legs.w2), 12),
+			jump: this.fromMap(jumpTop.concat(legs.jump), 12)
 		};
 
 		this.coinT = [8, 6, 2, 6].map((w) =>
@@ -657,12 +676,53 @@ export class PixelWorldEngine {
 				this.mario.scale.x = 12 * this.dir;
 				this.mario.visible = true;
 				this.mario.material.opacity = 1;
-				this.mario.material.map =
-					this.t - this.moving < 8 && mx < stopX
-						? Math.floor(this.t / 5) % 2
-							? this.marioT.w1
-							: this.marioT.w2
-						: this.marioT.stand;
+
+				// Calculate jump arc for floating coins and ? blocks
+				let jumpY = 0;
+				const jumpRadius = 38;
+
+				this.items.forEach((s) => {
+					if (s.userData.kind === 'coin') {
+						const dx = Math.abs(mx - s.userData.x);
+						if (dx < jumpRadius) {
+							const peakH = Math.max(0, s.userData.y - 40);
+							const p = (mx - (s.userData.x - jumpRadius)) / (2 * jumpRadius);
+							const h = peakH * Math.sin(p * Math.PI);
+							if (h > jumpY) jumpY = h;
+						}
+					}
+				});
+
+				this.qs.forEach((q) => {
+					const dx = Math.abs(mx - q.userData.x);
+					if (dx < 32) {
+						const peakH = 32;
+						const p = (mx - (q.userData.x - 32)) / 64;
+						const h = peakH * Math.sin(p * Math.PI);
+						if (h > jumpY) jumpY = h;
+					}
+				});
+
+				this.mario.position.y = 40 + Math.round(jumpY);
+
+				// Sound trigger on takeoff
+				if (jumpY > 4 && !this.wasJumping && this.t - this.moving < 8) {
+					sound.playJump();
+					this.wasJumping = true;
+				} else if (jumpY <= 2) {
+					this.wasJumping = false;
+				}
+
+				if (jumpY > 4) {
+					this.mario.material.map = this.marioT.jump;
+				} else {
+					this.mario.material.map =
+						this.t - this.moving < 8 && mx < stopX
+							? Math.floor(this.t / 5) % 2
+								? this.marioT.w1
+								: this.marioT.w2
+							: this.marioT.stand;
+				}
 			} else {
 				this.mario.visible = false;
 				if (this.st.p < 0.72) {
@@ -674,7 +734,7 @@ export class PixelWorldEngine {
 
 			this.qs.forEach((b) => {
 				const dx = Math.abs(this.mario.position.x - b.userData.x);
-				if (dx < 8 && this.mario.visible) this.hit(b);
+				if (dx < 8 && this.mario.position.y >= 64 && this.mario.visible) this.hit(b);
 				else if (dx > 40) b.userData.cool = false;
 				b.position.y = b.userData.y + Math.round(b.userData.off);
 			});
@@ -691,11 +751,17 @@ export class PixelWorldEngine {
 							depthTest: false
 						}));
 				}
-				if (Math.abs(this.mario.position.x - s.userData.x) < 8 && this.mario.visible) {
+				const dx = Math.abs(this.mario.position.x - s.userData.x);
+				const dy = Math.abs(this.mario.position.y - s.userData.y);
+				if (dx < 12 && dy < 16 && this.mario.visible) {
 					s.userData.got = true;
 					s.visible = false;
-					sound.playCoin();
-					this.onCoinBump();
+					if (s.userData.kind === 'mush') {
+						sound.playPowerUp();
+					} else {
+						sound.playCoin();
+						this.onCoinBump();
+					}
 				}
 			});
 		}
