@@ -637,19 +637,18 @@ export class PixelWorldEngine {
 		this.animId = requestAnimationFrame(this.loop);
 		this.t++;
 
-		let targetCamX = this.st.p * 2400;
 		const castleMid = (this.castle1.position.x + this.castle2.position.x) / 2;
+		let targetCamX = this.st.p * castleMid;
 
-		if (this.st.p > 0.88) {
-			targetCamX = castleMid;
-		}
 		if (this.currentCastle === 'castle2') {
 			targetCamX = this.castle2.position.x;
 		} else if (this.currentCastle === 'castle1') {
 			targetCamX = this.castle1.position.x;
 		}
 
-		this.camX += (targetCamX - this.camX) * 0.18;
+		const step = (targetCamX - this.camX) * 0.18;
+		const maxStep = 12;
+		this.camX += Math.max(-maxStep, Math.min(maxStep, step));
 		const d = this.camX - this.prev;
 		this.prev = this.camX;
 		if (Math.abs(d) > 0.05) {
