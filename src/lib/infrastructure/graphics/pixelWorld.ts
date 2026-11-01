@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { sound } from '../audio/retroAudio';
-import type { CastleId, WorldChunk, WorldTextures } from './pixelTypes';
+import type { CastleId, MarioPoseTextures, WorldChunk, WorldTextures } from './pixelTypes';
 import { createWorldTextures } from './pixelTextures';
 import { buildScenery, buildChunk, updateChunk, createSprite } from './pixelWorldBuilder';
 
@@ -290,8 +290,12 @@ export class PixelWorldEngine {
 		}
 	}
 
+	private setMarioPose(pose: keyof MarioPoseTextures, dir: 1 | -1 = 1) {
+		this.mario.material.map = dir === -1 ? this.tex.mario.left[pose] : this.tex.mario[pose];
+	}
+
 	private runMarioTransition(targetX: number, dir: 1 | -1, onDone: () => void) {
-		this.mario.scale.x = 12 * dir;
+		this.mario.scale.x = 12;
 		this.mario.visible = true;
 		this.mario.material.opacity = 1;
 
@@ -304,11 +308,11 @@ export class PixelWorldEngine {
 			duration,
 			ease: 'linear',
 			onUpdate: () => {
-				this.mario.material.map =
-					Math.floor(this.t / 4) % 2 ? this.tex.mario.w1 : this.tex.mario.w2;
+				const walkPose = Math.floor(this.t / 4) % 2 ? 'w1' : 'w2';
+				this.setMarioPose(walkPose, dir);
 			},
 			onComplete: () => {
-				this.mario.material.map = this.tex.mario.stand;
+				this.setMarioPose('stand', dir);
 				sound.playStageClear();
 				gsap.to(this.mario.material, {
 					opacity: 0,
@@ -446,7 +450,7 @@ export class PixelWorldEngine {
 				}
 
 				this.mario.position.x = mx;
-				this.mario.scale.x = 12 * this.dir;
+				this.mario.scale.x = 12;
 				this.mario.visible = true;
 				this.mario.material.opacity = 1;
 
@@ -500,21 +504,23 @@ export class PixelWorldEngine {
 					this.wasJumping = false;
 				}
 
+				const walkDir = (this.dir === -1 ? -1 : 1) as 1 | -1;
+
 				if (curElev > 3) {
 					if (jumpProgress < 0.38) {
-						this.mario.material.map = this.tex.mario.jump;
+						this.setMarioPose('jump', walkDir);
 					} else if (jumpProgress <= 0.62) {
-						this.mario.material.map = this.tex.mario.apex;
+						this.setMarioPose('apex', walkDir);
 					} else {
-						this.mario.material.map = this.tex.mario.fall;
+						this.setMarioPose('fall', walkDir);
 					}
 				} else {
-					this.mario.material.map =
-						this.t - this.moving < 8 && !isAtCastleStop
-							? Math.floor(this.t / 5) % 2
-								? this.tex.mario.w1
-								: this.tex.mario.w2
-							: this.tex.mario.stand;
+					if (this.t - this.moving < 8 && !isAtCastleStop) {
+						const walkPose = Math.floor(this.t / 5) % 2 ? 'w1' : 'w2';
+						this.setMarioPose(walkPose, walkDir);
+					} else {
+						this.setMarioPose('stand', walkDir);
+					}
 				}
 			} else {
 				this.mario.visible = false;

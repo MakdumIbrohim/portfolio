@@ -7,13 +7,17 @@ export interface WorldChunk {
 	items: THREE.Sprite[];
 }
 
-export interface MarioTextures {
+export interface MarioPoseTextures {
 	stand: THREE.CanvasTexture;
 	w1: THREE.CanvasTexture;
 	w2: THREE.CanvasTexture;
 	jump: THREE.CanvasTexture;
 	apex: THREE.CanvasTexture;
 	fall: THREE.CanvasTexture;
+}
+
+export interface MarioTextures extends MarioPoseTextures {
+	left: MarioPoseTextures;
 }
 
 export interface WorldTextures {

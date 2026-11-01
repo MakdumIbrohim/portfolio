@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { MarioTextures, WorldTextures } from './pixelTypes';
+import type { MarioPoseTextures, MarioTextures, WorldTextures } from './pixelTypes';
 
 export function createCanvasTexture(
 	w: number,
@@ -18,7 +18,7 @@ export function createCanvasTexture(
 	return tex;
 }
 
-export function textureFromMap(rows: string[], w: number): THREE.CanvasTexture {
+export function textureFromMap(rows: string[], w: number, flipX = false): THREE.CanvasTexture {
 	const PAL: Record<string, string> = {
 		R: '#d82800',
 		B: '#6c3b00',
@@ -30,7 +30,9 @@ export function textureFromMap(rows: string[], w: number): THREE.CanvasTexture {
 	};
 	return createCanvasTexture(w, rows.length, (ctx) => {
 		rows.forEach((r, y) => {
-			[...r.padEnd(w, '.')].forEach((char, i) => {
+			const line = [...r.padEnd(w, '.')];
+			if (flipX) line.reverse();
+			line.forEach((char, i) => {
 				if (char !== '.' && PAL[char]) {
 					ctx.fillStyle = PAL[char];
 					ctx.fillRect(i, y, 1, 1);
@@ -122,13 +124,21 @@ export function createWorldTextures(): WorldTextures {
 
 	const headRows = top.slice(0, 7);
 
+	const getPoses = (flip = false): MarioPoseTextures => ({
+		stand: textureFromMap(top.concat(legs.stand), 12, flip),
+		w1: textureFromMap(top.concat(legs.w1), 12, flip),
+		w2: textureFromMap(top.concat(legs.w2), 12, flip),
+		jump: textureFromMap(headRows.concat(jumpBody, legs.jump), 12, flip),
+		apex: textureFromMap(headRows.concat(apexBody, legs.apex), 12, flip),
+		fall: textureFromMap(headRows.concat(fallBody, legs.fall), 12, flip)
+	});
+
+	const marioRight = getPoses(false);
+	const marioLeft = getPoses(true);
+
 	const mario: MarioTextures = {
-		stand: textureFromMap(top.concat(legs.stand), 12),
-		w1: textureFromMap(top.concat(legs.w1), 12),
-		w2: textureFromMap(top.concat(legs.w2), 12),
-		jump: textureFromMap(headRows.concat(jumpBody, legs.jump), 12),
-		apex: textureFromMap(headRows.concat(apexBody, legs.apex), 12),
-		fall: textureFromMap(headRows.concat(fallBody, legs.fall), 12)
+		...marioRight,
+		left: marioLeft
 	};
 
 	const coins = [8, 6, 2, 6].map((w) =>
