@@ -67,6 +67,7 @@
 		<a href="#about" onclick={closeMenu}>About</a>
 		<a href="#skills" onclick={closeMenu}>Items</a>
 		<a href="#projects" onclick={closeMenu}>Stages</a>
+		<a href="#certificates" onclick={closeMenu}>Certs</a>
 		<a href="#journey" onclick={closeMenu}>Journey</a>
 		<a href="#contact" onclick={closeMenu}>Castle</a>
 	</nav>

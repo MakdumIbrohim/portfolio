@@ -18,6 +18,15 @@ export interface JourneyMilestone {
 	desc: string;
 }
 
+export interface Certificate {
+	title: string;
+	issuer: string;
+	date: string;
+	credentialUrl: string;
+	badge: 'STAR' | 'TROPHY' | 'MEDAL';
+	tags: string[];
+}
+
 export interface RetroProfile {
 	name: string;
 	title: string;
@@ -227,5 +236,56 @@ export const JOURNEY_LEVELS: JourneyMilestone[] = [
 	{
 		level: 'Level 3 · Proyek & Implementasi',
 		desc: 'Merancang arsitektur aplikasi riil, berkontribusi dalam tim, dan menerapkan best practice software engineering.'
+	}
+];
+
+export const CERTIFICATES_DATA: Certificate[] = [
+	{
+		title: 'Belajar Dasar Pemrograman Web',
+		issuer: 'Dicoding Indonesia',
+		date: '2024',
+		credentialUrl: 'https://www.dicoding.com',
+		badge: 'STAR',
+		tags: ['HTML5', 'CSS3', 'JavaScript']
+	},
+	{
+		title: 'Menjadi Flutter Developer Expert',
+		issuer: 'Dicoding Indonesia',
+		date: '2024',
+		credentialUrl: 'https://www.dicoding.com',
+		badge: 'TROPHY',
+		tags: ['Flutter', 'Dart']
+	},
+	{
+		title: 'Belajar Membuat Aplikasi Web dengan React',
+		issuer: 'Dicoding Indonesia',
+		date: '2024',
+		credentialUrl: 'https://www.dicoding.com',
+		badge: 'STAR',
+		tags: ['React', 'JavaScript']
+	},
+	{
+		title: 'Full-Stack Laravel Web Development',
+		issuer: 'BuildWithAngga',
+		date: '2023',
+		credentialUrl: 'https://buildwithangga.com',
+		badge: 'MEDAL',
+		tags: ['Laravel', 'PHP', 'MySQL']
+	},
+	{
+		title: 'Python for Backend & API Development',
+		issuer: 'Coursera',
+		date: '2023',
+		credentialUrl: 'https://www.coursera.org',
+		badge: 'STAR',
+		tags: ['Python', 'FastAPI']
+	},
+	{
+		title: 'Git & GitHub Developer Workflow',
+		issuer: 'Progate',
+		date: '2023',
+		credentialUrl: 'https://progate.com',
+		badge: 'MEDAL',
+		tags: ['Git', 'GitHub']
 	}
 ];

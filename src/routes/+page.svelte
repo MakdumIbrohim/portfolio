@@ -5,6 +5,7 @@
 		PROFILE,
 		TECH_ITEMS,
 		STAGE_PROJECTS,
+		CERTIFICATES_DATA,
 		JOURNEY_LEVELS
 	} from '../lib/domain/portfolio';
 	import { PixelWorldEngine } from '../lib/infrastructure/graphics/pixelWorld';
@@ -14,6 +15,7 @@
 	import AboutSection from '../lib/presentation/AboutSection.svelte';
 	import SkillsSection from '../lib/presentation/SkillsSection.svelte';
 	import ProjectsSection from '../lib/presentation/ProjectsSection.svelte';
+	import CertificatesSection from '../lib/presentation/CertificatesSection.svelte';
 	import JourneySection from '../lib/presentation/JourneySection.svelte';
 	import ContactSection from '../lib/presentation/ContactSection.svelte';
 
@@ -85,6 +87,8 @@
 	<SkillsSection items={TECH_ITEMS} onItemClick={(e) => bumpCoin(e.clientX, e.clientY)} />
 
 	<ProjectsSection projects={STAGE_PROJECTS} />
+
+	<CertificatesSection certificates={CERTIFICATES_DATA} />
 
 	<JourneySection milestones={JOURNEY_LEVELS} />
 

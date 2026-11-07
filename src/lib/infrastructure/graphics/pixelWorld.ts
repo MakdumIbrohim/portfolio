@@ -203,9 +203,9 @@ export class PixelWorldEngine {
 	};
 
 	private initScrollTriggers() {
-		const skies = ['#5c94fc', '#5c94fc', '#5c94fc', '#000000', '#5c94fc', '#000000'];
-		const dark = [false, false, false, true, false, true];
-		const ids = ['home', 'about', 'skills', 'projects', 'journey', 'contact'];
+		const skies = ['#5c94fc', '#5c94fc', '#5c94fc', '#000000', '#5c94fc', '#5c94fc', '#000000'];
+		const dark = [false, false, false, true, false, false, true];
+		const ids = ['home', 'about', 'skills', 'projects', 'certificates', 'journey', 'contact'];
 
 		const mainTrigger = ScrollTrigger.create({
 			trigger: 'main',
