@@ -20,6 +20,17 @@ export interface MarioTextures extends MarioPoseTextures {
 	left: MarioPoseTextures;
 }
 
+export interface StarData {
+	sprite: THREE.Sprite;
+	baseX: number;
+	baseY: number;
+	speed: number;
+	phase: number;
+	baseOpacity: number;
+	amp: number;
+	isTwinkle: boolean;
+}
+
 export interface WorldTextures {
 	cloud: THREE.CanvasTexture;
 	bush: THREE.CanvasTexture;
@@ -30,6 +41,11 @@ export interface WorldTextures {
 	pipe: (h: number) => THREE.CanvasTexture;
 	castle1: THREE.CanvasTexture;
 	castle2: THREE.CanvasTexture;
+	moon: THREE.CanvasTexture;
+	starDot: THREE.CanvasTexture;
+	starCross: THREE.CanvasTexture;
+	starSparkle: THREE.CanvasTexture;
+	starDiamond: THREE.CanvasTexture;
 	mario: MarioTextures;
 	coins: THREE.CanvasTexture[];
 }

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { WorldChunk, WorldTextures } from './pixelTypes';
+import type { StarData, WorldChunk, WorldTextures } from './pixelTypes';
 
 export function createSprite(
 	tex: THREE.CanvasTexture,
@@ -150,4 +150,79 @@ export function updateChunk(chunk: WorldChunk) {
 			s.userData.cool = false;
 		}
 	});
+}
+
+export function buildNightSky(
+	scene: THREE.Scene,
+	tex: WorldTextures
+): {
+	nightG: THREE.Group;
+	moon: THREE.Sprite;
+	stars: StarData[];
+} {
+	const nightG = new THREE.Group();
+	scene.add(nightG);
+	nightG.visible = false;
+
+	// Moon: positioned in upper-right sky (renderOrder: 1)
+	const moon = createSprite(tex.moon, 22, 20, 110, -42, 1, nightG);
+
+	// Multi-type stars with deterministic distribution
+	const stars: StarData[] = [];
+	const starTypes = [
+		{ tex: tex.starDot, w: 2, h: 2, weight: 35 },
+		{ tex: tex.starCross, w: 4, h: 4, weight: 26 },
+		{ tex: tex.starDiamond, w: 5, h: 5, weight: 22 },
+		{ tex: tex.starSparkle, w: 7, h: 7, weight: 17 }
+	];
+
+	let seed = 1337;
+	const rnd = () => {
+		seed = (seed * 16807) % 2147483647;
+		return (seed - 1) / 2147483646;
+	};
+
+	const totalStars = 76;
+	for (let i = 0; i < totalStars; i++) {
+		const roll = rnd() * 100;
+		let cumulative = 0;
+		let chosen = starTypes[0];
+		for (const st of starTypes) {
+			cumulative += st.weight;
+			if (roll <= cumulative) {
+				chosen = st;
+				break;
+			}
+		}
+
+		const x = Math.round((rnd() - 0.5) * 1280);
+		const y = Math.round(-12 - rnd() * 135);
+
+		// Don't collide directly with the moon
+		if (Math.abs(x - 110) < 24 && Math.abs(y - (-42)) < 24) {
+			continue;
+		}
+
+		const s = createSprite(chosen.tex, chosen.w, chosen.h, x, y, 1, nightG);
+		s.userData.baseX = x;
+
+		const isTwinkle = rnd() < 0.65;
+		const speed = 0.022 + rnd() * 0.048;
+		const phase = rnd() * Math.PI * 2;
+		const baseOpacity = 0.35 + rnd() * 0.45;
+		const amp = 0.2 + rnd() * 0.35;
+
+		stars.push({
+			sprite: s,
+			baseX: x,
+			baseY: y,
+			speed,
+			phase,
+			baseOpacity,
+			amp,
+			isTwinkle
+		});
+	}
+
+	return { nightG, moon, stars };
 }

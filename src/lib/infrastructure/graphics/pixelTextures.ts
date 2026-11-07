@@ -299,6 +299,37 @@ export function createWorldTextures(): WorldTextures {
 		x.fillRect(38, 48, 12, 4);
 	});
 
+	const moon = textureFromMap(
+		[
+			'......YYYY......',
+			'....YYWWWWYY....',
+			'..YYWWWWWWYY....',
+			'.YYWWWW.........',
+			'.YYWWW..........',
+			'YYWWW...........',
+			'YYWWW...........',
+			'YYWWW...........',
+			'YYWWW...........',
+			'.YYWWW..........',
+			'.YYWWWW.........',
+			'..YYWWWWWWYY....',
+			'....YYWWWWYY....',
+			'......YYYY......'
+		],
+		16
+	);
+
+	const starDot = createCanvasTexture(2, 2, (ctx) => {
+		ctx.fillStyle = '#ffffff';
+		ctx.fillRect(0, 0, 2, 2);
+	});
+
+	const starCross = textureFromMap(['.W.', 'WWW', '.W.'], 3);
+
+	const starDiamond = textureFromMap(['.WW.', 'WYYW', 'WYYW', '.WW.'], 4);
+
+	const starSparkle = textureFromMap(['..W..', '..W..', 'WWYWW', '..W..', '..W..'], 5);
+
 	return {
 		cloud,
 		bush,
@@ -309,6 +340,11 @@ export function createWorldTextures(): WorldTextures {
 		pipe,
 		castle1,
 		castle2,
+		moon,
+		starDot,
+		starCross,
+		starDiamond,
+		starSparkle,
 		mario,
 		coins
 	};

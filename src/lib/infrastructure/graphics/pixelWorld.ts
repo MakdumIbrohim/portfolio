@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { sound } from '../audio/retroAudio';
-import type { CastleId, MarioPoseTextures, WorldChunk, WorldTextures } from './pixelTypes';
+import type { CastleId, MarioPoseTextures, StarData, WorldChunk, WorldTextures } from './pixelTypes';
 import { createWorldTextures } from './pixelTextures';
-import { buildScenery, buildChunk, updateChunk, createSprite } from './pixelWorldBuilder';
+import { buildScenery, buildChunk, updateChunk, createSprite, buildNightSky } from './pixelWorldBuilder';
 
 export * from './pixelTypes';
 export * from './pixelTextures';
@@ -30,6 +30,10 @@ export class PixelWorldEngine {
 	private bushG!: THREE.Group;
 	private worldG!: THREE.Group;
 	private groundG!: THREE.Group;
+	private nightG!: THREE.Group;
+	private moon!: THREE.Sprite;
+	private stars: StarData[] = [];
+	private nightOpacity = { val: 0 };
 
 	private castle1!: THREE.Sprite;
 	private castle2!: THREE.Sprite;
@@ -92,6 +96,11 @@ export class PixelWorldEngine {
 		this.bushG = scenery.bushG;
 		this.worldG = scenery.worldG;
 		this.groundG = scenery.groundG;
+
+		const night = buildNightSky(this.scene, this.tex);
+		this.nightG = night.nightG;
+		this.moon = night.moon;
+		this.stars = night.stars;
 
 		this.qs = [];
 		this.items = [];
@@ -195,6 +204,10 @@ export class PixelWorldEngine {
 			this.bushG.position.y =
 				-this.H / 2;
 		this.cloudG.position.y = this.H / 2;
+		this.nightG.position.y = this.H / 2;
+
+		this.moon.position.x = Math.round(Math.min(this.W * 0.32, 130));
+		this.moon.position.y = -Math.round(Math.max(34, this.H * 0.16));
 
 		this.castleSpacing = this.W < 280 ? 95 : this.W < 360 ? 120 : 160;
 		if (this.castlePlaced) {
@@ -227,6 +240,14 @@ export class PixelWorldEngine {
 					const c = new THREE.Color(skies[i]);
 					gsap.to(this.st.sky, { r: c.r, g: c.g, b: c.b, duration: 0.8 });
 					this.cloudG.visible = this.hillG.visible = this.bushG.visible = !dark[i];
+					gsap.to(this.nightOpacity, {
+						val: dark[i] ? 1 : 0,
+						duration: 0.8,
+						ease: 'power2.inOut',
+						onUpdate: () => {
+							this.nightG.visible = this.nightOpacity.val > 0.005;
+						}
+					});
 				}
 			});
 			this.scrollTriggers.push(tr);
@@ -435,6 +456,32 @@ export class PixelWorldEngine {
 				((b.userData.baseX - this.camX * 0.8) % wrapSpan + wrapSpan) % wrapSpan - wrapSpan / 2;
 			b.position.x = Math.round(rel);
 		});
+
+		this.nightG.position.x = cx;
+
+		if (this.nightG.visible) {
+			const masterAlpha = this.nightOpacity.val;
+			(this.moon.material as THREE.SpriteMaterial).opacity = masterAlpha * 0.95;
+
+			for (let i = 0; i < this.stars.length; i++) {
+				const st = this.stars[i];
+				const rel =
+					((st.baseX - this.camX * 0.15) % wrapSpan + wrapSpan) % wrapSpan - wrapSpan / 2;
+				st.sprite.position.x = Math.round(rel);
+
+				const mat = st.sprite.material as THREE.SpriteMaterial;
+				if (st.isTwinkle) {
+					const wave = Math.sin(this.t * st.speed + st.phase);
+					const intensity = Math.max(
+						0.1,
+						st.baseOpacity + wave * st.amp + Math.pow(Math.max(0, wave), 3) * 0.35
+					);
+					mat.opacity = masterAlpha * Math.min(1.0, intensity);
+				} else {
+					mat.opacity = masterAlpha * st.baseOpacity;
+				}
+			}
+		}
 
 		if (!this.isEnteringCastle) {
 			if (this.currentCastle === 'outside') {
